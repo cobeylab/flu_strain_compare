@@ -13,10 +13,10 @@ import pandas as pd
 position_map_infile = "../data/H3_Conversion.txt" 
 
 seqs = "../data/H3_cell_vaccines.fasta"
-q1_id = "EPI1409001"
-q1_name = "A/Hong Kong/45/2019"
-q2_id = "EPI1548699"
-q2_name = "A/Minnesota/41/2019"
+q1_id = "EPI1843589"
+q1_name = "A/Cambodia/e0826360/2020"
+q2_id = "EPI1752480"
+q2_name = "A/Tasmania/503/2020"
 seq_lineage = "H3N2"
 
 position_map = pd.read_csv(position_map_infile, sep = "\t")
@@ -41,31 +41,43 @@ mutations = [m.position for m in mutation_list if m.position != "-"]
 glycosylations = seq_compare(seq1 = s1, seq2 = s2).identify_PNGS_changes()
 
 cmd.reinitialize()
-cmd.fetch('4we8')
+cmd.fetch('4we8') # A/Victoria/361/2011 sequence for reference
+
+# These next lines of code expand the monomer to a trimer
 cmd.symexp('sym','4we8','4we8','3')
 cmd.delete('sym11000000')
 cmd.delete('sym04000000')
 cmd.center('4we8, sym01000000, sym02000000')
+
+# Basic visual settings
 cmd.set('ray_trace_mode', 0)
 cmd.hide('everything')
 cmd.show('surface')
 cmd.remove('solvent')
 cmd.color('gray70', 'all')
+
+# Label parameters
 cmd.set('label_shadow_mode', 2)
 cmd.set('label_position', (0, 0, 20))
 cmd.set('label_size', -2)
 cmd.set('label_color', 'black')
 
+# Color mutations
 cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
 cmd.color('yellow', 'mutations')
 
+# Color glycosylations
 if len(glycosylations['glycan_additions']) > 0:
     cmd.select('glycan_additions', '(resi %s)'%'+'.join([i for i in glycosylations['glycan_additions']]))
     cmd.color('green', 'glycan_additions')
+if len(glycosylations['glycan_deletions']) > 0:
+    cmd.select('glycan_deletions', '(resi %s)'%'+'.join([i for i in glycosylations['glycan_deletions']]))
+    cmd.color('red', 'glycan_deletions')
 if len(glycosylations['glycans_shared']) > 0:
     cmd.select('glycans_shared', '(resi %s)'%'+'.join([i for i in glycosylations['glycans_shared']]))
     cmd.color('blue', 'glycans_shared')
 
+# Add in labels...should probably make some utility functions for this part
 for m in mutation_list:
     label = m.mutation
     resi = m.position
@@ -73,7 +85,6 @@ for m in mutation_list:
         cmd.select(label, 'n. CA and i. ' + resi)
         label_name = str(label)
         cmd.label(selection = label, expression = "label_name")
-
 for g in glycosylations['glycan_additions']:
     label = "PNGS" + str(g)
     resi = str(g)
@@ -81,7 +92,13 @@ for g in glycosylations['glycan_additions']:
         cmd.select(label, 'n. CA and i. ' + resi)
         label_name = str(label)
         cmd.label(selection = label, expression = "label_name")
-
+for g in glycosylations['glycan_deletions']:
+    label = "PNGS" + str(g)
+    resi = str(g)
+    if (resi != "-"):
+        cmd.select(label, 'n. CA and i. ' + resi)
+        label_name = str(label)
+        cmd.label(selection = label, expression = "label_name")
 for g in glycosylations['glycans_shared']:
     label = "PNGS" + str(g)
     resi = str(g)
@@ -89,6 +106,8 @@ for g in glycosylations['glycans_shared']:
         cmd.select(label, 'n. CA and i. ' + resi)
         label_name = str(label)
         cmd.label(selection = label, expression = "label_name")
+
+# Set the final view and save as PNG
 cmd.set_view((
     -0.424973905,   -0.644264817,    0.635839999,
     -0.903248310,    0.255860180,   -0.344455302,
