@@ -7,9 +7,11 @@ import pandas as pd
 # Path to a csv file that maps positions in query 
 # sequence to a numbering scheme, i.e., H3 numbering.
 # You can easily generate such a file from the Influenza Research Database's 
-# HA subtype numbering conversion tool.
-
+# HA subtype numbering conversion tool. This conversion file will work for
+# any H3 sequences that are exactly 566 amino acids long.
+# I will add flexibility/generalizability soon.
 position_map_infile = "../data/H3_Conversion.txt" 
+
 seqs = "../data/H3_cell_vaccines.fasta"
 q1_id = "EPI1409001"
 q1_name = "A/Hong Kong/45/2019"
