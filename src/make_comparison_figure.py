@@ -3,6 +3,7 @@ sys.path.append("./classes")
 from pymol import cmd
 from flu_compare import flu_seq,seq_compare
 import pandas as pd
+import json
 
 # Path to a csv file that maps positions in query 
 # sequence to a numbering scheme, i.e., H3 numbering.
@@ -10,28 +11,31 @@ import pandas as pd
 # HA subtype numbering conversion tool. This conversion file will work for
 # any H3 sequences that are exactly 566 amino acids long.
 # I will add flexibility/generalizability soon.
-position_map_infile = "../data/H3_Conversion.txt" 
 
-seqs = "../data/H3_cell_vaccines.fasta"
-q1_id = "EPI1843589"
-q1_name = "A/Cambodia/e0826360/2020"
-q2_id = "EPI1752480"
-q2_name = "A/Tasmania/503/2020"
-seq_lineage = "H3N2"
+parameters = json.load(open("../config.json"))
+
+position_map_infile = parameters["repo_directory"] + parameters["position_map_infile"]
+seq_file = parameters["repo_directory"] + parameters["seq_file"]
+q1_id = parameters["q1_id"]
+q1_name = parameters["q1_name"]
+q2_id = parameters["q2_id"]
+q2_name = parameters["q2_name"]
+seq_lineage = parameters["seq_lineage"]
+figure_dir = parameters["figure_dir"]
 
 position_map = pd.read_csv(position_map_infile, sep = "\t")
 position_map = position_map[position_map.Query != "-"].reset_index()
 
 s1 = flu_seq(name = q1_name,
     lineage = seq_lineage,
-    query_sequence_file = seqs,
+    query_sequence_file = seq_file,
     query_sequence_id = q1_id,
     position_map = position_map
     )
 
 s2 = flu_seq(name = q2_name,
     lineage = seq_lineage,
-    query_sequence_file = seqs,
+    query_sequence_file = seq_file,
     query_sequence_id = q2_id,
     position_map = position_map
     )
@@ -59,7 +63,7 @@ cmd.color('gray70', 'all')
 # Label parameters
 cmd.set('label_shadow_mode', 2)
 cmd.set('label_position', (0, 0, 20))
-cmd.set('label_size', -2)
+cmd.set('label_size', -5)
 cmd.set('label_color', 'black')
 
 # Color mutations
@@ -115,4 +119,12 @@ cmd.set_view((
      0.000000000,    0.000000000, -417.670715332,
      0.000007629,  -58.260734558,   10.906387329,
    329.294769287,  506.046661377,  -20.000000000 ))
-cmd.png('../figures/%s-%s.png'%(q1_name.replace("/","_"), q2_name.replace("/","_")), ray=1, dpi=300)
+
+cmd.png('%s/%s-%s.png'%(
+        figure_dir,
+        q1_name.replace("/","_"),
+        q2_name.replace("/","_")),
+    width=800,
+    height=800,
+    ray=1,
+    dpi=300)

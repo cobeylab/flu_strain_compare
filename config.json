@@ -1,0 +1,11 @@
+{
+    "repo_directory": "/home/parevalo/Midway/home/strain_compare/",
+    "figure_dir": "/home/parevalo/Midway/home/strain_compare/figures/",
+    "position_map_infile": "data/H3_Conversion.txt", 
+    "seq_file": "data/H3_cell_vaccines.fasta",
+    "q1_id": "EPI1843589",
+    "q1_name": "A/Cambodia/e0826360/2020",
+    "q2_id": "EPI1752480",
+    "q2_name": "A/Tasmania/503/2020",
+    "seq_lineage": "H3N2"
+}
