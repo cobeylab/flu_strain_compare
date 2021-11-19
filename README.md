@@ -15,14 +15,14 @@ Eventually, this will all be containerized, but until then, this requires:
 
 Once the dependencies are installed, you can modify the `config.json` file depending on what you want to do.
 
-`repo_directory`: Absolute path to the repository root folder.
-`figure_directory`: Absolute path to where you want the figures to be saved.
-`position_map_infile`: Path to file to convert to standard H3 numbering, relative to the repo root directory.
-`seq_file`: Path to fasta-formatted file that contains full-length amino acid HA sequences.
-`q1_id`: Sequence ID of the first query strain. The sequence id is the first word in the fasta header of the desired sequence.
-`q1_name`: Name of the first query strain.
-`q2_id` and `q2_name`: Same as above but for the second query strain.
-`seq_lineage`: Just H3N2 for now.
+* `repo_directory`: Absolute path to the repository root folder.
+* `figure_directory`: Absolute path to where you want the figures to be saved.
+* `position_map_infile`: Path to file to convert to standard H3 numbering, relative to the repo root directory.
+* `seq_file`: Path to fasta-formatted file that contains full-length amino acid HA sequences.
+* `q1_id`: Sequence ID of the first query strain. The sequence id is the first word in the fasta header of the desired sequence.
+* `q1_name`: Name of the first query strain.
+* `q2_id` and `q2_name`: Same as above but for the second query strain.
+* `seq_lineage`: Just H3N2 for now.
 
 Then, you can run the script by changing into the `src` directory in your terminal and running:
 
