@@ -1,4 +1,6 @@
 import sys
+
+from pymol.viewing import color
 sys.path.append("./classes")
 from pymol import cmd
 from flu_compare import flu_seq,seq_compare
@@ -44,6 +46,8 @@ mutation_list = seq_compare(seq1 = s1, seq2 = s2).identify_mutations()
 mutations = [m.position for m in mutation_list if m.position != "-"]
 glycosylations = seq_compare(seq1 = s1, seq2 = s2).identify_PNGS_changes()
 
+
+
 cmd.reinitialize()
 cmd.fetch('4we8') # A/Victoria/361/2011 sequence for reference
 
@@ -61,9 +65,9 @@ cmd.remove('solvent')
 cmd.color('gray70', 'all')
 
 # Label parameters
-cmd.set('label_shadow_mode', 2)
+#cmd.set('label_shadow_mode', 2)
 cmd.set('label_position', (0, 0, 20))
-cmd.set('label_size', -5)
+cmd.set('label_size', -4)
 cmd.set('label_color', 'black')
 
 # Color mutations
@@ -111,14 +115,50 @@ for g in glycosylations['glycans_shared']:
         label_name = str(label)
         cmd.label(selection = label, expression = "label_name")
 
-# Set the final view and save as PNG
-cmd.set_view((
-    -0.424973905,   -0.644264817,    0.635839999,
-    -0.903248310,    0.255860180,   -0.344455302,
-     0.059236884,   -0.720711648,   -0.690678000,
-     0.000000000,    0.000000000, -417.670715332,
-     0.000007629,  -58.260734558,   10.906387329,
-   329.294769287,  506.046661377,  -20.000000000 ))
+cmd.rotate("y", "80")
+cmd.rotate("z", "-90")
+cmd.rotate("x", "40")
+cmd.rotate("y", "25")
+cmd.rotate("x", "10")
+cmd.rotate("z", "20")
+
+
+
+def create_label(x, y, z, label_text, label_name, label_color):
+    cmd.pseudoatom(label_name, pos=[x,y,z])
+    global label_temp
+    label_temp = label_text
+    cmd.label(selection = label_name, expression = "label_temp")
+    cmd.hide("wire", selection = label_name)
+    cmd.set("label_color", selection = label_name, value = label_color)
+
+y_start = -60
+
+create_label(x=-50,
+    y=y_start,
+    z=10,
+    label_text="Mutations",
+    label_name="mutation_label",
+    label_color="yellow")
+create_label(x=-50,
+    y=y_start - 3,
+    z=10,
+    label_text="Shared PNGS",
+    label_name="pngs_shared_label",
+    label_color="blue")
+create_label(x=-50,
+    y=y_start - 6,
+    z=10,
+    label_text="Added PNGS",
+    label_name="pngs_add_label",
+    label_color="green")
+create_label(x=-50,
+    y=y_start - 9,
+    z=10,
+    label_text="Deleted PNGS",
+    label_name="pngs_del_label",
+    label_color="red")
+
 
 cmd.png('%s/%s-%s.png'%(
         figure_dir,
