@@ -4,30 +4,30 @@
 
 ## Dependencies
 
-Eventually, this will all be containerized, but until then, this requires:
+This utility runs in a container defined by the `Dockerfile`, so you should only need Docker installed on your system to build the container with the following command:
 
-* `python` >= version 3.0
-* [`pandas`](https://pypi.org/project/pandas/)
-* [`biopython`](https://pypi.org/project/biopython/)
-* [`pymol`](https://github.com/schrodinger/pymol-open-source)
+```
+docker build ./ -t flu_strain_compare
+```
 
-## Usage
+## Configuration
 
-Once the dependencies are installed, you can modify the `config.json` file depending on what you want to do.
+Once the dependencies are installed, you can modify the `configuration/config.json` file depending on what you want to do.
 
-* `repo_directory`: Absolute path to the repository root folder.
-* `figure_directory`: Absolute path to where you want the figures to be saved.
-* `position_map_infile`: Path to file to convert to standard H3 numbering, relative to the repo root directory.
-* `seq_file`: Path to fasta-formatted file that contains full-length amino acid HA sequences.
+* `position_map_infile`: Path to file to convert to standard H3 numbering. File must be in `data` directory.
+* `seq_file`: Path to fasta-formatted file that contains full-length amino acid HA sequences. File must be in `data` directory.
 * `q1_id`: Sequence ID of the first query strain. The sequence id is the first word in the fasta header of the desired sequence.
 * `q1_name`: Name of the first query strain.
 * `q2_id` and `q2_name`: Same as above but for the second query strain.
 * `seq_lineage`: Just H3N2 for now.
 
-Then, you can run the script by changing into the `src` directory in your terminal and running:
+## Running 
+
+With your configuration file set up to your liking, running is as simple as
 
 ```
-pymol make_comparison_figure.py
+export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
+docker run -v ${flu_strain_compare_path}/figures:/usr/figures -v ${flu_strain_compare_path}/configuration:/usr/configuration -v ${flu_strain_compare_path}/data:/usr/data flu_strain_compare
 ```
 
 ### Strains available

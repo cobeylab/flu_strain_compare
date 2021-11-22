@@ -7,23 +7,16 @@ from flu_compare import flu_seq,seq_compare
 import pandas as pd
 import json
 
-# Path to a csv file that maps positions in query 
-# sequence to a numbering scheme, i.e., H3 numbering.
-# You can easily generate such a file from the Influenza Research Database's 
-# HA subtype numbering conversion tool. This conversion file will work for
-# any H3 sequences that are exactly 566 amino acids long.
-# I will add flexibility/generalizability soon.
-
-parameters = json.load(open("../config.json"))
-
-position_map_infile = parameters["repo_directory"] + parameters["position_map_infile"]
-seq_file = parameters["repo_directory"] + parameters["seq_file"]
+parameters = json.load(open("/usr/configuration/config.json"))
+figure_dir = "/usr/figures/"
+position_map_infile = "/usr/data/" + parameters["position_map_infile"]
+seq_file = "/usr/data/" + parameters["seq_file"]
 q1_id = parameters["q1_id"]
 q1_name = parameters["q1_name"]
 q2_id = parameters["q2_id"]
 q2_name = parameters["q2_name"]
 seq_lineage = parameters["seq_lineage"]
-figure_dir = parameters["figure_dir"]
+
 
 position_map = pd.read_csv(position_map_infile, sep = "\t")
 position_map = position_map[position_map.Query != "-"].reset_index()
