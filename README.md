@@ -10,6 +10,12 @@ This utility runs in a container defined by the `Dockerfile`, so you should only
 docker build ./ -t flu_strain_compare
 ```
 
+If you're using Singularity, then it's a little different:
+
+```
+singularity pull --arch amd64 library://philarevalo/dev/ubuntu-pymol-biopython:latest
+```
+
 ## Configuration
 
 Once the dependencies are installed, you can modify the `configuration/config.json` file depending on what you want to do.
@@ -28,6 +34,13 @@ With your configuration file set up to your liking, running is as simple as
 ```
 export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
 docker run -v ${flu_strain_compare_path}/figures:/usr/figures -v ${flu_strain_compare_path}/configuration:/usr/configuration -v ${flu_strain_compare_path}/data:/usr/data flu_strain_compare
+```
+
+For Singularity:
+
+```
+export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
+singularity exec --bind ${flu_strain_compare_path}/figures:/usr/figures,${flu_strain_compare_path}/configuration:/usr/configuration,${flu_strain_compare_path}/data:/usr/data,${flu_strain_compare_path}/src:/usr/src ubuntu-pymol-biopython_latest.sif pymol -c /usr/src/make_comparison_figure.py
 ```
 
 ### Strains available

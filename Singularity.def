@@ -1,8 +1,6 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
-%files
-	./src/* /usr/src
 %post
 	TZ=America/Chicago
 	apt-get update && \
@@ -14,6 +12,3 @@ From: ubuntu:20.04
 		cd /usr/src
 %environment
 	export TZ=America/Chicago
-%runscript
-	cd /usr/src
-	exec /bin/bash pymol -c ./make_comparison_figure.py "$@"

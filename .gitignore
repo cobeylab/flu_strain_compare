@@ -1,3 +1,4 @@
 *.cif
 **__pycache__**
 **.simg
+**.sif

@@ -1,7 +1,7 @@
 import sys
 
 from pymol.viewing import color
-sys.path.append("./classes")
+sys.path.append("/usr/src/classes")
 from pymol import cmd
 from flu_compare import flu_seq,seq_compare
 import pandas as pd
