@@ -1,18 +1,17 @@
 # Flu Strain Compare
 
-## Introduction
-
 ## Dependencies
 
-This utility runs in a container defined by the `Dockerfile`, so you should only need Docker installed on your system to build the container with the following command:
+This utility runs in a container defined by the `Dockerfile`, so you should only need Docker installed on your system. You can use the following command to build the container, but note that Docker does not run on Midway. I've tested this on my local Ubuntu and Windows machines, but not on OSX.
 
 ```
 docker build ./ -t flu_strain_compare
 ```
 
-If you're using Singularity, then it's a little different:
+You can, however, use Singularity on Midway. You have to pull the image from my (Phil's) account on the Singularity cloud since we cannot build de novo containers on the cluster.
 
 ```
+module load singularity
 singularity pull --arch amd64 library://philarevalo/dev/ubuntu-pymol-biopython:latest
 ```
 
@@ -20,8 +19,8 @@ singularity pull --arch amd64 library://philarevalo/dev/ubuntu-pymol-biopython:l
 
 Once the dependencies are installed, you can modify the `configuration/config.json` file depending on what you want to do.
 
-* `position_map_infile`: Path to file to convert to standard H3 numbering. File must be in `data` directory.
-* `seq_file`: Path to fasta-formatted file that contains full-length amino acid HA sequences. File must be in `data` directory.
+* `position_map_infile`: Path to file to convert to standard H3 numbering. File must be in `data` directory. The default file will work for any full-length (566 amino acids) H3 sequence.
+* `seq_file`: Path to fasta-formatted file that contains full-length amino acid HA sequences. File must be in `data` directory. Currently only tested on full-length amino acid sequences of H3 (566 amino acids long).
 * `q1_id`: Sequence ID of the first query strain. The sequence id is the first word in the fasta header of the desired sequence.
 * `q1_name`: Name of the first query strain.
 * `q2_id` and `q2_name`: Same as above but for the second query strain.
