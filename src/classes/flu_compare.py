@@ -43,7 +43,16 @@ class flu_seq:
         # Get PNGS sites
         gly = re.compile("N[-]*[A-O,Q-Z][-]*[S,T]")
         self.pngs = [position_map.loc[m.start(), "H3"] for m in gly.finditer(str(self.sequence.seq))]
-
+        
+    def align_to_reference(self):
+        ref_file = "%s_ref.fasta"%(self.lineage)
+        temp_seqfile = "tmp/tmp.fasta"
+        temp_alignfile = "tmp/aligned.fasta"
+        command = "mafft --keeplength %s %s > %s"(ref_file, temp_seqfile, temp_alignfile)
+        newseq = [s for s in SeqIO.parse(temp_alignfile, "fasta") if s.id == self.sequence.id]
+        assert (len(newseq) == 1), "Alignment not found"
+        self.sequence = newseq[0]
+        
 class seq_compare:
     def __init__(self, seq1, seq2):
         assert (type(seq1) == flu_seq), "Seq1 must be a flu_seq object"
