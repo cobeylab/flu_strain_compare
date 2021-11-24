@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-This utility runs in a container defined by the `Dockerfile`, so you should only need Docker installed on your system. You can use the following command to build the container, but note that Docker does not run on Midway. I've tested this on my local Ubuntu and Windows machines, but not on OSX.
+This utility runs in a container defined by the `Dockerfile`, so you should only need Docker installed on your system. You can use the following command to build the container, but note that Docker does not run on Midway. I've tested this on Ubuntu, Windows 10, and an M1 Mac.
 
 ```
 docker build ./ -t flu_strain_compare
@@ -28,12 +28,14 @@ Once the dependencies are installed, you can modify the `configuration/config.js
 
 ## Running 
 
-With your configuration file set up to your liking, running is as simple as
+With your configuration file set up to your liking, you can just run the container with the following commands:
 
 ```
 export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
 docker run -v ${flu_strain_compare_path}:/app flu_strain_compare make_comparison_figure.py
 ```
+
+This will output a `*.png` figure to the `figures` directory and a `*.pse` file which you can open up on your local version of pymol.
 
 For Singularity:
 
