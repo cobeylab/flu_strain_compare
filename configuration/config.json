@@ -1,8 +1,9 @@
 {
-    "seq_file": "H3_cell_vaccines.fasta",
-    "q1_id": "EPI1548699",
-    "q1_name": "A/Minnesota/41/2019",
-    "q2_id": "EPI1752480",
-    "q2_name": "A/Tasmania/503/2020",
-    "seq_lineage": "H3"
+    "seq_file": "H1_db.fasta",
+    "q1_id": "EPI506029",
+    "q1_name": "A/Beijing/132/2010",
+    "q2_id": "EPI501723",
+    "q2_name": "A/Colorado/3514/2013",
+    "seq_lineage": "H1",
+    "numbering_scheme": "H1pdm"
 }
