@@ -7,6 +7,8 @@ from flu_compare import flu_seq,seq_compare
 import pandas as pd
 import json
 
+
+
 parameters = json.load(open("/usr/configuration/config.json"))
 figure_dir = "/usr/figures/"
 seq_file = "/usr/data/" + parameters["seq_file"]
@@ -19,22 +21,20 @@ seq_lineage = parameters["seq_lineage"]
 s1 = flu_seq(name = q1_name,
     lineage = seq_lineage,
     query_sequence_file = seq_file,
-    query_sequence_id = q1_id,
-    position_map = position_map
+    query_sequence_id = q1_id
     )
 
 s2 = flu_seq(name = q2_name,
     lineage = seq_lineage,
     query_sequence_file = seq_file,
-    query_sequence_id = q2_id,
-    position_map = position_map
+    query_sequence_id = q2_id
     )
 
 mutation_list = seq_compare(seq1 = s1, seq2 = s2).identify_mutations()
-mutations = [m.position for m in mutation_list if m.position != "-"]
+mutations = [m.pymol_resi for m in mutation_list if m.pymol_resi != "-"]
 glycosylations = seq_compare(seq1 = s1, seq2 = s2).identify_PNGS_changes()
 
-cmd.fetch('/usr/data/%s_renumbered.pdb'%seq_lineage)
+cmd.load('/usr/data/%s_renumbered.pse'%seq_lineage)
 cmd.set('ray_trace_mode', 0)
 
 # Label parameters
@@ -61,7 +61,7 @@ if len(glycosylations['glycans_shared']) > 0:
 # Add in labels...should probably make some utility functions for this part
 for m in mutation_list:
     label = m.mutation
-    resi = m.position
+    resi = m.pymol_resi
     if resi != "-":
         cmd.select(label, 'n. CA and i. ' + resi)
         label_name = str(label)
@@ -132,3 +132,8 @@ cmd.png('%s/%s-%s.png'%(
     height=800,
     ray=1,
     dpi=300)
+
+cmd.save('%s/%s-%s.pse'%(
+        figure_dir,
+        q1_name.replace("/","_"),
+        q2_name.replace("/","_")))

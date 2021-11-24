@@ -31,4 +31,4 @@ for i, (r, aa) in enumerate(resis):
 	cmd.alter("chain B+D+F & resi %s & resn %s"%(r,aa), "resi='%s_'"%(str(i+start_position)))
 cmd.iterate("chain B", "print(resi, resn)")
 
-cmd.save("../data/H1_renumbered.pdb")
+cmd.save("../data/H1_renumbered.pse")

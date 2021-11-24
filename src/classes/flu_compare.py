@@ -35,8 +35,6 @@ class flu_seq:
         self.lineage = lineage
         self.sequence = query_seqs[query_sequence_id]
         self.query_sequence_file = query_sequence_file
-        self.position_map = read.csv("/usr/data/%s_Converstion.txt"%(self.lineage), sep = "\t")
-        self.position_map = self.position_map[self.position_map.numbering != "-"].reset_index()
         self.align_to_reference()
 
         # Get PNGS sites
@@ -52,22 +50,30 @@ class flu_seq:
         system(command)
         newseq = [s for s in SeqIO.parse(temp_alignfile, "fasta") if s.id == self.sequence.id]
         assert (len(newseq) == 1), "Alignment not found"
-        assert(len(newseq[0]) == len(self.position_map)), "Alignment not same length as reference"
         self.sequence = newseq[0]
         
 class seq_compare:
     def __init__(self, seq1, seq2):
         assert (type(seq1) == flu_seq), "Seq1 must be a flu_seq object"
         assert (type(seq2) == flu_seq), "Seq2 must be a flu_seq object"
+        assert (seq1.lineage == seq2.lineage), "Cannot compare sequences from different lineages"
         self.seq1 = seq1
         self.seq2 = seq2
+        self.lineage = seq1.lineage
     def identify_mutations(self):
+        def convert_numbering(position,
+            seq_lineage_in,
+            numbering_scheme):
+            new_pos = 0
+            if seq_lineage_in == "H3" and numbering_scheme == "H3":
+                new_pos = (position + 1) - 16 
+            return new_pos 
         mutations_out = []
         for i, (b1, b2) in enumerate(zip(self.seq1.sequence.seq, self.seq2.sequence.seq)):
             if b1 != b2:
-                p = self.seq1.position_map.loc[i, "H3"]
+                p = convert_numbering(i, self.lineage, self.lineage)
                 mutations_out.append(
-                    flu_mutation(position = str(i+1) + "_",
+                    flu_mutation(pymol_resi = str(i+1) + "_",
                         mutation = "".join([str(b1), str(p), str(b2)]),
                         strain1 = self.seq1.name,
                         strain2 = self.seq2.name)

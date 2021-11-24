@@ -9,8 +9,6 @@ cmd.delete('sym04000000')
 cmd.center('4we8, sym01000000, sym02000000')
 
 # Basic visual settings
-cmd.set('ray_trace_mode', 0)
-cmd.hide('everything')
 cmd.show('surface')
 cmd.remove('solvent')
 cmd.color('gray70', 'all')
@@ -32,4 +30,4 @@ for i, (r, aa) in enumerate(resis):
 		new_resi = str(int(r)+offset)
 		cmd.alter("resi %s and resn %s"%(r,aa), "resi='%s_'"%(new_resi))
 cmd.iterate("4we8", "print(resi, resn)")
-cmd.save("../data/H3_renumbered.pdb")
+cmd.save("../data/H3_renumbered.pse")
