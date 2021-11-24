@@ -9,17 +9,12 @@ import json
 
 parameters = json.load(open("/usr/configuration/config.json"))
 figure_dir = "/usr/figures/"
-position_map_infile = "/usr/data/" + parameters["position_map_infile"]
 seq_file = "/usr/data/" + parameters["seq_file"]
 q1_id = parameters["q1_id"]
 q1_name = parameters["q1_name"]
 q2_id = parameters["q2_id"]
 q2_name = parameters["q2_name"]
 seq_lineage = parameters["seq_lineage"]
-
-
-position_map = pd.read_csv(position_map_infile, sep = "\t")
-position_map = position_map[position_map.Query != "-"].reset_index()
 
 s1 = flu_seq(name = q1_name,
     lineage = seq_lineage,
@@ -39,23 +34,8 @@ mutation_list = seq_compare(seq1 = s1, seq2 = s2).identify_mutations()
 mutations = [m.position for m in mutation_list if m.position != "-"]
 glycosylations = seq_compare(seq1 = s1, seq2 = s2).identify_PNGS_changes()
 
-
-
-cmd.reinitialize()
-cmd.fetch('4we8') # A/Victoria/361/2011 sequence for reference
-
-# These next lines of code expand the monomer to a trimer
-cmd.symexp('sym','4we8','4we8','3')
-cmd.delete('sym11000000')
-cmd.delete('sym04000000')
-cmd.center('4we8, sym01000000, sym02000000')
-
-# Basic visual settings
+cmd.fetch('/usr/data/%s_renumbered.pdb'%seq_lineage)
 cmd.set('ray_trace_mode', 0)
-cmd.hide('everything')
-cmd.show('surface')
-cmd.remove('solvent')
-cmd.color('gray70', 'all')
 
 # Label parameters
 #cmd.set('label_shadow_mode', 2)
@@ -107,15 +87,6 @@ for g in glycosylations['glycans_shared']:
         cmd.select(label, 'n. CA and i. ' + resi)
         label_name = str(label)
         cmd.label(selection = label, expression = "label_name")
-
-cmd.rotate("y", "80")
-cmd.rotate("z", "-90")
-cmd.rotate("x", "40")
-cmd.rotate("y", "25")
-cmd.rotate("x", "10")
-cmd.rotate("z", "20")
-
-
 
 def create_label(x, y, z, label_text, label_name, label_color):
     cmd.pseudoatom(label_name, pos=[x,y,z])
