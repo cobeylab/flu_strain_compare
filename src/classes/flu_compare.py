@@ -54,9 +54,9 @@ class flu_seq:
         self.pngs = [str(m.start() + 1) + "_" for m in gly.finditer(str(self.sequence.seq))]
         
     def align_to_reference(self):
-        ref_file = "/usr/data/%s_ref.fasta"%(self.lineage)
-        temp_seqfile = "/usr/figures/tmp.fasta"
-        temp_alignfile = "/usr/figures/aligned.fasta"
+        ref_file = "/app/data/%s_ref.fasta"%(self.lineage)
+        temp_seqfile = "/app/figures/tmp.fasta"
+        temp_alignfile = "/app/figures/aligned.fasta"
         SeqIO.write([self.sequence], temp_seqfile, "fasta")
         command = "mafft --keeplength --add %s %s > %s"%(temp_seqfile, ref_file, temp_alignfile)
         system(command)
@@ -73,8 +73,8 @@ class seq_compare:
         self.seq2 = seq2
         self.lineage = seq1.lineage
         self.numbering_scheme = numbering_scheme
-        assert (exists("/usr/data/%s_Conversion.csv"%self.lineage)), "Conversion file does not exist"
-        self.conversion_table = pd.read_csv("/usr/data/%s_Conversion.csv"%self.lineage,
+        assert (exists("/app/data/%s_Conversion.csv"%self.lineage)), "Conversion file does not exist"
+        self.conversion_table = pd.read_csv("/app/data/%s_Conversion.csv"%self.lineage,
             index_col = "ref_one_index")
     def convert_numbering(self,
         position):

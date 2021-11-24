@@ -1,7 +1,7 @@
 import sys
 
 from pymol.viewing import color
-sys.path.append("/usr/src/classes")
+sys.path.append("/app/src/classes")
 from pymol import cmd
 from flu_compare import flu_seq,seq_compare
 import pandas as pd
@@ -20,9 +20,9 @@ def create_label(x, y, z, label_text, label_name, label_color):
     cmd.set("label_color", selection = label_name, value = label_color)
 
 
-parameters = json.load(open("/usr/configuration/config.json"))
-figure_dir = "/usr/figures/"
-seq_file = "/usr/data/" + parameters["seq_file"]
+parameters = json.load(open("/app/configuration/config.json"))
+figure_dir = "/app/figures/"
+seq_file = "/app/data/" + parameters["seq_file"]
 q1_id = parameters["q1_id"]
 q1_name = parameters["q1_name"]
 q2_id = parameters["q2_id"]
@@ -49,7 +49,7 @@ gly_del = comparison.identify_PNGS_changes("deletions")
 gly_add = comparison.identify_PNGS_changes("additions")
 gly_share = comparison.identify_PNGS_changes("shared")
 
-cmd.load('/usr/data/%s_renumbered.pse'%seq_lineage)
+cmd.load('/app/data/%s_renumbered.pse'%seq_lineage)
 cmd.set('ray_trace_mode', 0)
 
 # Label parameters

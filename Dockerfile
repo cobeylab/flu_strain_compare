@@ -7,6 +7,5 @@ RUN apt-get update && \
     apt-get install -y mafft &&\
     pip install pandas && \
     pip install biopython
-COPY ./src /usr/src
-WORKDIR /usr/src
-CMD ["pymol", "-c", "./make_comparison_figure.py"]
+WORKDIR /app/src
+ENTRYPOINT ["pymol", "-c"]
