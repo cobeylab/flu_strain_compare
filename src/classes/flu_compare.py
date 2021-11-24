@@ -1,7 +1,7 @@
 from os.path import exists
 from Bio import SeqIO
 import re
-
+from os import system
 class flu_mutation:
     def __init__(self,
         position,
@@ -40,15 +40,18 @@ class flu_seq:
         self.position_map = position_map
         self.query_sequence_file = query_sequence_file
 
+        self.align_to_reference()
         # Get PNGS sites
         gly = re.compile("N[-]*[A-O,Q-Z][-]*[S,T]")
         self.pngs = [position_map.loc[m.start(), "H3"] for m in gly.finditer(str(self.sequence.seq))]
         
     def align_to_reference(self):
-        ref_file = "%s_ref.fasta"%(self.lineage)
-        temp_seqfile = "tmp/tmp.fasta"
-        temp_alignfile = "tmp/aligned.fasta"
-        command = "mafft --keeplength %s %s > %s"(ref_file, temp_seqfile, temp_alignfile)
+        ref_file = "/usr/data/%s_ref.fasta"%(self.lineage)
+        temp_seqfile = "/usr/figures/tmp.fasta"
+        temp_alignfile = "/usr/figures/aligned.fasta"
+        SeqIO.write([self.sequence], temp_seqfile, "fasta")
+        command = "mafft --keeplength --add %s %s > %s"%(temp_seqfile, ref_file, temp_alignfile)
+        system(command)
         newseq = [s for s in SeqIO.parse(temp_alignfile, "fasta") if s.id == self.sequence.id]
         assert (len(newseq) == 1), "Alignment not found"
         self.sequence = newseq[0]
