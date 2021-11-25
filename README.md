@@ -60,6 +60,6 @@ singularity exec --bind ${flu_strain_compare_path}/figures:/usr/figures,${flu_st
 * 2021-2022 northern hemisphere cell-based recommendation (name = `A/Wisconsin/588/2019`, id = `EPI1715168`)
 * 2020-2021 northern hemisphere cell-based recommendation (name = `A/Hawaii/70/2019`, id = `EPI1669665`) 
 * 2019-2020 cell-based recommendation (name = `A/Brisbane/02/2018`, id = `EPI1212884`)
-* 2017-2020 cell-based recommendation (name = `A/Michigan/45/2015`, id = `EPI699812`
+* 2017-2019 cell-based recommendation (name = `A/Michigan/45/2015`, id = `EPI699812`
 * 2009-2017 cell-based recommendation (name = `A/California/04/2009`, id = `EPI178457`)
 * 2013-2014 example from Linderman et al. (name = `A/Colorado/3514/2013`, id = `EPI501723`)
