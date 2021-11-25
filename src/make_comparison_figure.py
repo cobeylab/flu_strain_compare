@@ -1,5 +1,4 @@
 import sys
-
 from pymol.viewing import color
 sys.path.append("/app/src/classes")
 from pymol import cmd
@@ -18,7 +17,15 @@ def create_label(x, y, z, label_text, label_name, label_color):
     cmd.label(selection = label_name, expression = "label_temp")
     cmd.hide("wire", selection = label_name)
     cmd.set("label_color", selection = label_name, value = label_color)
-
+def label_resi(resilist):
+    for m in resilist:
+        label = m.label
+        resi = m.pymol_resi
+        if resi != "-":
+            cmd.select(label, 'n. CA and i. ' + resi)
+            global label_name
+            label_name = str(label)
+            cmd.label(selection = label, expression = "label_name")
 
 parameters = json.load(open("/app/configuration/config.json"))
 figure_dir = "/app/figures/"
@@ -35,7 +42,6 @@ s1 = flu_seq(name = q1_name,
     query_sequence_file = seq_file,
     query_sequence_id = q1_id
     )
-
 s2 = flu_seq(name = q2_name,
     lineage = seq_lineage,
     query_sequence_file = seq_file,
@@ -48,12 +54,10 @@ mutations = [m.pymol_resi for m in mutation_list if m.pymol_resi != "-"]
 gly_del = comparison.identify_PNGS_changes("deletions")
 gly_add = comparison.identify_PNGS_changes("additions")
 gly_share = comparison.identify_PNGS_changes("shared")
-
 cmd.load('/app/data/%s_renumbered.pse'%seq_lineage)
 cmd.set('ray_trace_mode', 0)
 
 # Label parameters
-#cmd.set('label_shadow_mode', 2)
 cmd.set('label_position', (0, 0, 20))
 cmd.set('label_size', -4)
 cmd.set('label_color', 'black')
@@ -62,24 +66,12 @@ cmd.set('label_color', 'black')
 cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
 cmd.color('yellow', 'mutations')
 
-
-
 # Color glycosylations
 color_pngs(gly_del, "glycan_deletions", "red")
 color_pngs(gly_add, "glycan_additions", "green")
 color_pngs(gly_share, "glycans_shared", "blue")
 
-
-def label_resi(resilist):
-    for m in resilist:
-        label = m.label
-        resi = m.pymol_resi
-        if resi != "-":
-            cmd.select(label, 'n. CA and i. ' + resi)
-            global label_name
-            label_name = str(label)
-            cmd.label(selection = label, expression = "label_name")
-
+# Add labels
 label_resi(mutation_list)
 label_resi(gly_del)
 label_resi(gly_add)
@@ -111,6 +103,7 @@ create_label(x=-50,
     label_name="pngs_del_label",
     label_color="red")
 
+# Save figures
 cmd.png('%s/%s-%s.png'%(
         figure_dir,
         q1_name.replace("/","_"),
@@ -119,7 +112,6 @@ cmd.png('%s/%s-%s.png'%(
     height=800,
     ray=1,
     dpi=300)
-
 cmd.save('%s/%s-%s.pse'%(
         figure_dir,
         q1_name.replace("/","_"),
