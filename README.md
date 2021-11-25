@@ -41,7 +41,7 @@ For Singularity:
 
 ```
 export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
-singularity exec --bind ${flu_strain_compare_path}/figures:/usr/figures,${flu_strain_compare_path}/configuration:/usr/configuration,${flu_strain_compare_path}/data:/usr/data,${flu_strain_compare_path}/src:/usr/src ubuntu-pymol-biopython_latest.sif pymol -c /usr/src/make_comparison_figure.py
+singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_latest.sif pymol -c /app/src/make_comparison_figure.py
 ```
 
 ## Strains available
