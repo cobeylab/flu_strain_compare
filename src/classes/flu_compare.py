@@ -4,6 +4,9 @@ import re
 from os import system
 import pandas as pd
 from pymol import cmd
+import sys
+sys.path.append("/app/src/classes")
+import label_globals
 
 class flu_mutation:
     def __init__(self,
@@ -76,6 +79,10 @@ class seq_compare:
         assert (exists("/app/data/%s_Conversion.csv"%self.lineage)), "Conversion file does not exist"
         self.conversion_table = pd.read_csv("/app/data/%s_Conversion.csv"%self.lineage,
             index_col = "ref_one_index")
+        self.mutation_list = self.identify_mutations()
+        self.gly_del = self.identify_PNGS_changes("deletions")
+        self.gly_add = self.identify_PNGS_changes("additions")
+        self.gly_share = self.identify_PNGS_changes("shared")
     def convert_numbering(self,
         position):
         return self.conversion_table.loc[position + 1, self.numbering_scheme]
@@ -110,11 +117,8 @@ class seq_compare:
     def make_figure(self):
         q1_name = self.seq1.name
         q2_name = self.seq2.name
-        mutation_list = self.identify_mutations()
-        mutations = [m.pymol_resi for m in mutation_list if m.pymol_resi != "-"]
-        gly_del = self.identify_PNGS_changes("deletions")
-        gly_add = self.identify_PNGS_changes("additions")
-        gly_share = self.identify_PNGS_changes("shared")
+        
+        mutations = [m.pymol_resi for m in self.mutation_list if m.pymol_resi != "-"]
 
         cmd.load('/app/data/%s_renumbered.pse'%self.lineage)
         cmd.set('ray_trace_mode', 0)
@@ -129,16 +133,16 @@ class seq_compare:
         cmd.color('yellow', 'mutations')
 
         # Color glycosylations
-        color_pngs(gly_del, "glycan_deletions", "red")
-        color_pngs(gly_add, "glycan_additions", "green")
-        color_pngs(gly_share, "glycans_shared", "blue")
-
+        color_pngs(self.gly_del, "glycan_deletions", "red")
+        color_pngs(self.gly_add, "glycan_additions", "green")
+        color_pngs(self.gly_share, "glycans_shared", "blue")
+        base_filename = "%s-%s"%(q1_name.replace("/","_"),
+                q2_name.replace("/","_"))
         # Add labels
-        label_resi(mutation_list)
-        label_resi(gly_del)
-        label_resi(gly_add)
-        label_resi(gly_share)
-
+        label_resi(self.mutation_list)
+        label_resi(self.gly_del)
+        label_resi(self.gly_add)
+        label_resi(self.gly_share)
         y_start = -60
         x_pos = -50
         z_pos = 10
@@ -166,31 +170,12 @@ class seq_compare:
             label_text = "Deleted PNGS",
             label_name = "pngs_del_label",
             label_color = "red")
-
-        base_filename = "%s-%s"%(q1_name.replace("/","_"),
-                q2_name.replace("/","_"))
         return base_filename
 
 def color_pngs(glylist, name, color):
     if len(glylist) > 0:
         cmd.select(name, '(resi %s)'%'+'.join([g.pymol_resi for g in glylist]))
         cmd.color(color, name)
-def create_label(x, y, z, label_text, label_name, label_color):
-    cmd.pseudoatom(label_name, pos=[x, y, z])
-    global label_temp
-    label_temp = label_text
-    cmd.label(selection = label_name, expression = "label_temp")
-    cmd.hide("wire", selection = label_name)
-    cmd.set("label_color", selection = label_name, value = label_color)
-def label_resi(resilist):
-    for m in resilist:
-        label = m.label
-        resi = m.pymol_resi
-        if resi != "-":
-            cmd.select(label, 'n. CA and i. ' + resi)
-            global label_name
-            label_name = str(label)
-            cmd.label(selection = label, expression = "label_name")
 def make_comparison_object(parameters):
     seq_file = "/app/data/" + parameters["seq_file"]
     q1_id = parameters["q1_id"]
@@ -213,3 +198,18 @@ def make_comparison_object(parameters):
         seq2 = s2,
         numbering_scheme = numbering_scheme)
     return comparison
+
+def create_label(x, y, z, label_text, label_name, label_color):
+    cmd.pseudoatom(label_name, pos=[x, y, z])
+    label_globals.label_name = str(label_text)
+    cmd.label(selection = label_name, expression = "label_globals.label_name")
+    cmd.hide("wire", selection = label_name)
+    cmd.set("label_color", selection = label_name, value = label_color)
+def label_resi(resilist):
+    for m in resilist:
+        label = m.label
+        resi = m.pymol_resi
+        if resi != "-":
+            cmd.select(label, 'n. CA and i. ' + resi)
+            label_globals.label_name = str(label)
+            cmd.label(selection = label, expression = "label_globals.label_name")
