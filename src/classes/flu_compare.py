@@ -3,6 +3,7 @@ from Bio import SeqIO
 import re
 from os import system
 import pandas as pd
+from pymol import cmd
 
 class flu_mutation:
     def __init__(self,
@@ -105,3 +106,110 @@ class seq_compare:
             pngs_out.append(flu_pngs(pymol_resi = pymol_position,
                 label = label))
         return pngs_out
+    
+    def make_figure(self):
+        q1_name = self.seq1.name
+        q2_name = self.seq2.name
+        mutation_list = self.identify_mutations()
+        mutations = [m.pymol_resi for m in mutation_list if m.pymol_resi != "-"]
+        gly_del = self.identify_PNGS_changes("deletions")
+        gly_add = self.identify_PNGS_changes("additions")
+        gly_share = self.identify_PNGS_changes("shared")
+
+        cmd.load('/app/data/%s_renumbered.pse'%self.lineage)
+        cmd.set('ray_trace_mode', 0)
+
+        # Label parameters
+        cmd.set('label_position', (0, 0, 20))
+        cmd.set('label_size', -4)
+        cmd.set('label_color', 'black')
+
+        # Color mutations
+        cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
+        cmd.color('yellow', 'mutations')
+
+        # Color glycosylations
+        color_pngs(gly_del, "glycan_deletions", "red")
+        color_pngs(gly_add, "glycan_additions", "green")
+        color_pngs(gly_share, "glycans_shared", "blue")
+
+        # Add labels
+        label_resi(mutation_list)
+        label_resi(gly_del)
+        label_resi(gly_add)
+        label_resi(gly_share)
+
+        y_start = -60
+        x_pos = -50
+        z_pos = 10
+        create_label(x = x_pos,
+            y = y_start,
+            z = z_pos,
+            label_text = "Mutations",
+            label_name = "mutation_label",
+            label_color = "yellow")
+        create_label(x = x_pos,
+            y = y_start - 3,
+            z = z_pos,
+            label_text = "Shared PNGS",
+            label_name = "pngs_shared_label",
+            label_color = "blue")
+        create_label(x = x_pos,
+            y = y_start - 6,
+            z = z_pos,
+            label_text = "Added PNGS",
+            label_name = "pngs_add_label",
+            label_color = "green")
+        create_label(x = x_pos,
+            y = y_start - 9,
+            z = z_pos,
+            label_text = "Deleted PNGS",
+            label_name = "pngs_del_label",
+            label_color = "red")
+
+        base_filename = "%s-%s"%(q1_name.replace("/","_"),
+                q2_name.replace("/","_"))
+        return base_filename
+
+def color_pngs(glylist, name, color):
+    if len(glylist) > 0:
+        cmd.select(name, '(resi %s)'%'+'.join([g.pymol_resi for g in glylist]))
+        cmd.color(color, name)
+def create_label(x, y, z, label_text, label_name, label_color):
+    cmd.pseudoatom(label_name, pos=[x, y, z])
+    global label_temp
+    label_temp = label_text
+    cmd.label(selection = label_name, expression = "label_temp")
+    cmd.hide("wire", selection = label_name)
+    cmd.set("label_color", selection = label_name, value = label_color)
+def label_resi(resilist):
+    for m in resilist:
+        label = m.label
+        resi = m.pymol_resi
+        if resi != "-":
+            cmd.select(label, 'n. CA and i. ' + resi)
+            global label_name
+            label_name = str(label)
+            cmd.label(selection = label, expression = "label_name")
+def make_comparison_object(parameters):
+    seq_file = "/app/data/" + parameters["seq_file"]
+    q1_id = parameters["q1_id"]
+    q1_name = parameters["q1_name"]
+    q2_id = parameters["q2_id"]
+    q2_name = parameters["q2_name"]
+    seq_lineage = parameters["seq_lineage"]
+    numbering_scheme = parameters["numbering_scheme"]
+    s1 = flu_seq(name = q1_name,
+        lineage = seq_lineage,
+        query_sequence_file = seq_file,
+        query_sequence_id = q1_id
+        )
+    s2 = flu_seq(name = q2_name,
+        lineage = seq_lineage,
+        query_sequence_file = seq_file,
+        query_sequence_id = q2_id
+        )
+    comparison = seq_compare(seq1 = s1,
+        seq2 = s2,
+        numbering_scheme = numbering_scheme)
+    return comparison
