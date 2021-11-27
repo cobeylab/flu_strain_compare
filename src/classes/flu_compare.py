@@ -30,7 +30,6 @@ class flu_pngs:
         self.pymol_resi = pymol_resi
         self.label = label
 
-
 class flu_seq:
     def __init__(self,
         name,
