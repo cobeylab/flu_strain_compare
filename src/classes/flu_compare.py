@@ -36,19 +36,17 @@ class flu_pngs:
 
 class flu_seq:
     def __init__(self,
-        name,
         lineage,
         query_sequence_file,
         query_sequence_id):
         assert (exists(query_sequence_file)), "Query sequence file must exist"
         assert (type(lineage) == str), "Lineage must be a string."
-        assert (type(name) == str), "Name must be a string."
         assert (type(query_sequence_id) == str), "Query sequence ID must be a string."
         query_seqs = {s.id: s for s in SeqIO.parse(query_sequence_file, "fasta")}
         assert (len(query_seqs) >= 1), "Query sequence file must contain at least 1 sequence."
-        self.name = name
         self.lineage = lineage
         self.sequence = query_seqs[query_sequence_id]
+        self.name = self.sequence.description.split(" | ")[1]
         self.query_sequence_file = query_sequence_file
         self.align_to_reference()
 
@@ -179,17 +177,15 @@ def color_pngs(glylist, name, color):
 def make_comparison_object(parameters):
     seq_file = "/app/data/" + parameters["seq_file"]
     q1_id = parameters["q1_id"]
-    q1_name = parameters["q1_name"]
     q2_id = parameters["q2_id"]
-    q2_name = parameters["q2_name"]
     seq_lineage = parameters["seq_lineage"]
     numbering_scheme = parameters["numbering_scheme"]
-    s1 = flu_seq(name = q1_name,
+    s1 = flu_seq(
         lineage = seq_lineage,
         query_sequence_file = seq_file,
         query_sequence_id = q1_id
         )
-    s2 = flu_seq(name = q2_name,
+    s2 = flu_seq(
         lineage = seq_lineage,
         query_sequence_file = seq_file,
         query_sequence_id = q2_id

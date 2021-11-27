@@ -21,8 +21,7 @@ Once the dependencies are installed, you can modify the `configuration/config.js
 
 * `seq_file`: Path to fasta-formatted file that contains full-length amino acid HA sequences. File must be in `data` directory.
 * `q1_id`: Sequence ID of the first query strain. The sequence id is the first word in the fasta header of the desired sequence.
-* `q1_name`: Name of the first query strain.
-* `q2_id` and `q2_name`: Same as above but for the second query strain.
+* `q2_id`: Same as above but for the second query strain.
 * `seq_lineage`: Specify the lineage of your query strains. Either H1 or H3 for now.
 * `numbering_scheme`: What numbering scheme do you want to use for mutation identification? For H1 sequences, you can choose `H1pdm`, `H3`, or `H1_1933`. For H3 sequences, only `H3` numbering is available.
 
