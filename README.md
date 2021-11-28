@@ -55,7 +55,7 @@ singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_l
 * 2016-2018 cell-based recommendation (name = `A/Hong Kong/4801/2014`, id = `EPI539576`)
 * 2015-2016 cell-based recommendation (name = `A/Switzerland/9715293/2013`, id = `EPI530687`)
 * 2013-2015 cell-based recommendation (name = `A/Victoria/361/2011 `, id = `EPI349103`)
-### H1
+### H1 (not fully implemented yet)
 * 2021-2022 northern hemisphere cell-based recommendation (name = `A/Wisconsin/588/2019`, id = `EPI1715168`)
 * 2020-2021 northern hemisphere cell-based recommendation (name = `A/Hawaii/70/2019`, id = `EPI1669665`) 
 * 2019-2020 cell-based recommendation (name = `A/Brisbane/02/2018`, id = `EPI1212884`)

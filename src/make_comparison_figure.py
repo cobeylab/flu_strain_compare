@@ -1,9 +1,8 @@
-
 import sys
 sys.path.append("/app/src/classes")
 from pymol.viewing import color
 from pymol import cmd
-from flu_compare import make_comparison_object, label_resi, create_label
+from flu_compare import make_comparison_object
 import label_globals
 import json
 

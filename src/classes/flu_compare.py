@@ -52,7 +52,7 @@ class flu_seq:
 
         # Get PNGS sites
         gly = re.compile("N[-]*[A-O,Q-Z][-]*[S,T]")
-        self.pngs = [str(m.start() + 1) + "_" for m in gly.finditer(str(self.sequence.seq))]
+        self.pngs = [str(m.start() + 1) for m in gly.finditer(str(self.sequence.seq))]
         
     def align_to_reference(self):
         ref_file = "/app/data/%s_ref.fasta"%(self.lineage)
@@ -91,7 +91,7 @@ class seq_compare:
             if b1 != b2:
                 p = self.convert_numbering(i)
                 mutations_out.append(
-                    flu_mutation(pymol_resi = str(i+1) + "_",
+                    flu_mutation(pymol_resi = str(i+1),
                         label = "".join([str(b1), str(p), str(b2)]),
                         strain1 = self.seq1.name,
                         strain2 = self.seq2.name)
@@ -117,14 +117,13 @@ class seq_compare:
         q2_name = self.seq2.name
         
         mutations = [m.pymol_resi for m in self.mutation_list if m.pymol_resi != "-"]
-
-        cmd.load('/app/data/%s_renumbered.pse'%self.lineage)
+        cmd.reinitialize()
         cmd.set('ray_trace_mode', 0)
-
         # Label parameters
         cmd.set('label_position', (0, 0, 20))
-        cmd.set('label_size', -4)
+        cmd.set('label_size', -3)
         cmd.set('label_color', 'black')
+        cmd.load('/app/data/%s_pngs.pse'%self.lineage)
 
         # Color mutations
         cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
@@ -141,38 +140,25 @@ class seq_compare:
         label_resi(self.gly_del)
         label_resi(self.gly_add)
         label_resi(self.gly_share)
-        y_start = -60
-        x_pos = -50
-        z_pos = 10
-        create_label(x = x_pos,
-            y = y_start,
-            z = z_pos,
-            label_text = "Mutations",
-            label_name = "mutation_label",
-            label_color = "yellow")
-        create_label(x = x_pos,
-            y = y_start - 3,
-            z = z_pos,
-            label_text = "Shared PNGS",
-            label_name = "pngs_shared_label",
-            label_color = "blue")
-        create_label(x = x_pos,
-            y = y_start - 6,
-            z = z_pos,
-            label_text = "Added PNGS",
-            label_name = "pngs_add_label",
-            label_color = "green")
-        create_label(x = x_pos,
-            y = y_start - 9,
-            z = z_pos,
-            label_text = "Deleted PNGS",
-            label_name = "pngs_del_label",
-            label_color = "red")
+
+        x_pos = -60
+        z_pos = 0
+        y_start = 0
+        y_offset = -5
+        create_label(x_pos, y_start, z_pos, "Mutations", "mutlabel", "yellow")
+        create_label(x_pos, y_start + y_offset, z_pos, "PNGS added", "glyaddlabel", "green")
+        create_label(x_pos, y_start + 2*y_offset , z_pos, "PNGS deleted", "glydellabel", "red")
+        create_label(x_pos, y_start + 3*y_offset, z_pos, "PNGS shared", "glysharelabel", "blue")
+        cmd.hide("everything", "extra_glycans")
+
+        create_label(0, 110, 0, "%s vs. %s"%(q1_name, q2_name), "strains", "white", label_size=-5)
         return base_filename
 
 def color_pngs(glylist, name, color):
     if len(glylist) > 0:
-        cmd.select(name, '(resi %s)'%'+'.join([g.pymol_resi for g in glylist]))
+        PNGS_names = ["'PNGS%s'"%g.pymol_resi for g in glylist]
+        cmd.select(name, ' | '.join(PNGS_names))
+        cmd.show("sticks", name)
         cmd.color(color, name)
 def make_comparison_object(parameters):
     seq_file = "/app/data/" + parameters["seq_file"]
@@ -195,12 +181,14 @@ def make_comparison_object(parameters):
         numbering_scheme = numbering_scheme)
     return comparison
 
-def create_label(x, y, z, label_text, label_name, label_color):
-    cmd.pseudoatom(label_name, pos=[x, y, z])
+def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
+    cmd.pseudoatom(label_name)
     label_globals.label_name = str(label_text)
     cmd.label(selection = label_name, expression = "label_globals.label_name")
     cmd.hide("wire", selection = label_name)
     cmd.set("label_color", selection = label_name, value = label_color)
+    cmd.set("label_position", selection = label_name, value = [x,y,z])
+    cmd.set("label_size", selection = label_name, value = label_size)
 def label_resi(resilist):
     for m in resilist:
         label = m.label
