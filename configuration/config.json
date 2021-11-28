@@ -1,7 +1,7 @@
 {
-        "seq_file": "H3_cell_vaccines.fasta",
-        "q1_id": "EPI1843589",
-        "q2_id": "EPI1885402",
-        "seq_lineage": "H3",
-        "numbering_scheme": "H3"
+        "seq_file": "H1_cell.fasta",
+        "q1_id": "EPI699812",
+        "q2_id": "EPI1212884",
+        "seq_lineage": "H1",
+        "numbering_scheme": "H1pdm"
 }

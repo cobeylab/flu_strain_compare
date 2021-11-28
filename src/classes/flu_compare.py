@@ -156,8 +156,10 @@ class seq_compare:
 
 def color_pngs(glylist, name, color):
     if len(glylist) > 0:
-        PNGS_names = ["'PNGS%s'"%g.pymol_resi for g in glylist]
-        cmd.select(name, ' | '.join(PNGS_names))
+        PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
+        PNGS_names_final = set(PNGS_names).intersection(set(cmd.get_names(type="selections")))
+        # Need to add warning here if it finds a PNGS site that isn't in the structure
+        cmd.select(name, ' | '.join(PNGS_names_final))
         cmd.show("sticks", name)
         cmd.color(color, name)
 def make_comparison_object(parameters):
