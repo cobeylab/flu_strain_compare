@@ -13,6 +13,7 @@ comparison = make_comparison_object(parameters)
 base_filename = comparison.make_figure()
 
 # Save figures
+cmd.set("opaque_background", "on")
 cmd.png('%s/%s.png'%(
         figure_dir,
         base_filename),
