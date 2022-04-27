@@ -4,6 +4,9 @@ import re
 from os import system
 import pandas as pd
 from pymol import cmd
+import numpy
+import json
+from json import JSONEncoder
 
 class FluMutation:
     def __init__(self,
@@ -151,6 +154,19 @@ class SequenceComparison:
         create_label(0, 110, 0, "%s vs. %s"%(q1_name, q2_name), "strains", "white", label_size=-5)
         return base_filename
 
+# Encoder for SequenceComparison serialization
+class SequenceComparisonEncoder(JSONEncoder):
+        def default(self, o):
+            if isinstance(o, numpy.ndarray):
+                return o.tolist()
+            if isinstance(o, SequenceComparison):
+                # Don't serialize conversion table
+                sc = o.__dict__
+                sc.pop("conversion_table")
+                return sc
+            return o.__dict__
+
+
 def color_pngs(glylist, name, color):
     if len(glylist) > 0:
         PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
@@ -159,6 +175,7 @@ def color_pngs(glylist, name, color):
         cmd.select(name, ' | '.join(PNGS_names_final))
         cmd.show("sticks", name)
         cmd.color(color, name)
+
 def make_comparison_object(parameters):
     seq_file = "data/" + parameters["seq_file"]
     q1_id = parameters["q1_id"]
@@ -178,6 +195,7 @@ def make_comparison_object(parameters):
     comparison = SequenceComparison(seq1 = s1,
         seq2 = s2,
         numbering_scheme = numbering_scheme)
+
     return comparison
 
 def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
