@@ -52,9 +52,9 @@ class flu_seq:
         self.pngs = [str(m.start() + 1) for m in gly.finditer(str(self.sequence.seq))]
         
     def align_to_reference(self):
-        ref_file = "/app/data/%s_ref.fasta"%(self.lineage)
-        temp_seqfile = "/app/figures/tmp.fasta"
-        temp_alignfile = "/app/figures/aligned.fasta"
+        ref_file = "data/%s_ref.fasta"%(self.lineage)
+        temp_seqfile = "figures/tmp.fasta"
+        temp_alignfile = "figures/aligned.fasta"
         SeqIO.write([self.sequence], temp_seqfile, "fasta")
         command = "mafft --keeplength --add %s %s > %s"%(temp_seqfile, ref_file, temp_alignfile)
         system(command)
@@ -71,8 +71,8 @@ class seq_compare:
         self.seq2 = seq2
         self.lineage = seq1.lineage
         self.numbering_scheme = numbering_scheme
-        assert (exists("/app/data/%s_Conversion.csv"%self.lineage)), "Conversion file does not exist"
-        self.conversion_table = pd.read_csv("/app/data/%s_Conversion.csv"%self.lineage,
+        assert (exists("data/%s_Conversion.csv"%self.lineage)), "Conversion file does not exist"
+        self.conversion_table = pd.read_csv("data/%s_Conversion.csv"%self.lineage,
             index_col = "ref_one_index")
         self.mutation_list = self.identify_mutations()
         self.gly_del = self.identify_PNGS_changes("deletions")
@@ -120,7 +120,7 @@ class seq_compare:
         cmd.set('label_position', (0, 0, 20))
         cmd.set('label_size', -3)
         cmd.set('label_color', 'black')
-        cmd.load('/app/data/%s_pngs.pse'%self.lineage)
+        cmd.load('data/%s_pngs.pse'%self.lineage)
 
         # Color mutations
         cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
@@ -160,7 +160,7 @@ def color_pngs(glylist, name, color):
         cmd.show("sticks", name)
         cmd.color(color, name)
 def make_comparison_object(parameters):
-    seq_file = "/app/data/" + parameters["seq_file"]
+    seq_file = "data/" + parameters["seq_file"]
     q1_id = parameters["q1_id"]
     q2_id = parameters["q2_id"]
     seq_lineage = parameters["seq_lineage"]
