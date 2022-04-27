@@ -4,9 +4,6 @@ import re
 from os import system
 import pandas as pd
 from pymol import cmd
-import sys
-sys.path.append("/app/src/classes")
-import label_globals
 
 class flu_mutation:
     def __init__(self,
@@ -185,8 +182,7 @@ def make_comparison_object(parameters):
 
 def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
     cmd.pseudoatom(label_name)
-    label_globals.label_name = str(label_text)
-    cmd.label(selection = label_name, expression = "label_globals.label_name")
+    cmd.label(selection = label_name, expression = f"'{label_text}'")
     cmd.hide("wire", selection = label_name)
     cmd.set("label_color", selection = label_name, value = label_color)
     cmd.set("label_position", selection = label_name, value = [x,y,z])
@@ -197,5 +193,4 @@ def label_resi(resilist):
         resi = m.pymol_resi
         if resi != "-":
             cmd.select(label, 'n. CA and i. ' + resi)
-            label_globals.label_name = str(label)
-            cmd.label(selection = label, expression = "label_globals.label_name")
+            cmd.label(selection = label, expression = f"'{label}'")
