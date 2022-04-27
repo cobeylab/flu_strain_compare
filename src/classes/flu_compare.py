@@ -59,8 +59,8 @@ class FluSeq:
         
     def align_to_reference(self):
         ref_file = f"{DATA_DIR}/{self.lineage}_ref.fasta"
-        temp_seqfile = "figures/tmp.fasta"
-        temp_alignfile = "figures/aligned.fasta"
+        temp_seqfile = f"{DATA_DIR}/tmp/tmp.fasta"
+        temp_alignfile = f"{DATA_DIR}/tmp/aligned.fasta"
         SeqIO.write([self.sequence], temp_seqfile, "fasta")
         command = "mafft --keeplength --add %s %s > %s"%(temp_seqfile, ref_file, temp_alignfile)
         system(command)

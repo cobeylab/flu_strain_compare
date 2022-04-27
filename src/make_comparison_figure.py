@@ -4,7 +4,7 @@ from classes.flu_compare import make_comparison_object, make_figure, SequenceCom
 import json
 
 parameters = json.load(open("configuration/config.json"))
-figure_dir = "figures/"
+figure_dir = parameters["output_dir"]
 
 comparison = make_comparison_object(parameters)
 
