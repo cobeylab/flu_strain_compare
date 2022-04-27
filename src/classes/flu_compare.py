@@ -1,4 +1,4 @@
-from os.path import exists
+import os
 from Bio import SeqIO
 import re
 from os import system
@@ -7,6 +7,7 @@ from pymol import cmd
 import numpy
 import json
 from json import JSONEncoder
+
 
 # Internal data directory
 DATA_DIR = "data"
@@ -42,7 +43,7 @@ class FluSeq:
         lineage,
         query_sequence_file,
         query_sequence_id):
-        assert (exists(query_sequence_file)), f"Query sequence file {query_sequence_file} does not exist"
+        assert (os.path.exists(query_sequence_file)), f"Query sequence file {query_sequence_file} does not exist"
         assert (type(lineage) == str), "Lineage must be a string."
         assert (type(query_sequence_id) == str), "Query sequence ID must be a string."
         query_seqs = {s.id: s for s in SeqIO.parse(query_sequence_file, "fasta")}
@@ -59,15 +60,25 @@ class FluSeq:
         
     def align_to_reference(self):
         ref_file = f"{DATA_DIR}/{self.lineage}_ref.fasta"
-        temp_seqfile = f"{DATA_DIR}/tmp/tmp.fasta"
-        temp_alignfile = f"{DATA_DIR}/tmp/aligned.fasta"
+
+        TEMP_DIR = f"{DATA_DIR}/tmp"
+        if not os.path.exists(TEMP_DIR):
+            os.makedirs(TEMP_DIR)
+
+        temp_seqfile = f"{TEMP_DIR}/tmp.fasta"
+        temp_alignfile = f"{TEMP_DIR}/aligned.fasta"
         SeqIO.write([self.sequence], temp_seqfile, "fasta")
         command = "mafft --keeplength --add %s %s > %s"%(temp_seqfile, ref_file, temp_alignfile)
         system(command)
         newseq = [s for s in SeqIO.parse(temp_alignfile, "fasta") if s.id == self.sequence.id]
         assert (len(newseq) == 1), f"Alignment {ref_file} not found"
         self.sequence = newseq[0]
-        
+
+        # Clean up temp files
+        os.remove(temp_seqfile)
+        os.remove(temp_alignfile)
+        os.rmdir(TEMP_DIR)
+
 class SequenceComparison:
     def __init__(self, seq1, seq2, numbering_scheme):
         assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
@@ -78,7 +89,7 @@ class SequenceComparison:
         self.lineage = seq1.lineage
         self.numbering_scheme = numbering_scheme
         conversion_file = f"{DATA_DIR}/{self.lineage}_Conversion.csv"
-        assert (exists(conversion_file)), f"Conversion file {conversion_file} does not exist"
+        assert (os.path.exists(conversion_file)), f"Conversion file {conversion_file} does not exist"
         self.conversion_table = pd.read_csv(conversion_file,
             index_col = "ref_one_index")
         self.mutation_list = self.identify_mutations()
