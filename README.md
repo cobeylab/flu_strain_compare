@@ -42,7 +42,7 @@ With your configuration file set up to your liking, you can just run the contain
 
 ```
 export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
-docker run -v ${flu_strain_compare_path}:/app flu_strain_compare <SCRIPT NAME>.py
+docker run -v ${flu_strain_compare_path}:/app flu_strain_compare python3 <SCRIPT NAME>.py
 ```
 
 For Singularity:
