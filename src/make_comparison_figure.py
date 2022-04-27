@@ -1,6 +1,6 @@
 from pymol.viewing import color
 from pymol import cmd
-from classes.flu_compare import make_comparison_object, SequenceComparisonEncoder
+from classes.flu_compare import make_comparison_object, make_figure, SequenceComparisonEncoder
 import json
 
 parameters = json.load(open("configuration/config.json"))
@@ -10,7 +10,7 @@ comparison = make_comparison_object(parameters)
 
 print(json.dumps(comparison, indent=4, cls=SequenceComparisonEncoder))
 
-base_filename = comparison.make_figure()
+base_filename = make_figure(comparison)
 
 # Save figures
 cmd.set("opaque_background", "on")

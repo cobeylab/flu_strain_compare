@@ -115,48 +115,6 @@ class SequenceComparison:
             pngs_out.append(FluPngs(pymol_resi = pymol_position,
                 label = label))
         return pngs_out
-    
-    def make_figure(self):
-        q1_name = self.seq1.name
-        q2_name = self.seq2.name
-        
-        mutations = [m.pymol_resi for m in self.mutation_list if m.pymol_resi != "-"]
-        cmd.reinitialize()
-        cmd.set('ray_trace_mode', 0)
-        # Label parameters
-        cmd.set('label_position', (0, 0, 20))
-        cmd.set('label_size', -3)
-        cmd.set('label_color', 'black')
-        cmd.load(f"{DATA_DIR}/{self.lineage}_pngs.pse")
-
-        # Color mutations
-        cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
-        cmd.color('yellow', 'mutations')
-
-        # Color glycosylations
-        color_pngs(self.gly_del, "glycan_deletions", "red")
-        color_pngs(self.gly_add, "glycan_additions", "green")
-        color_pngs(self.gly_share, "glycans_shared", "blue")
-        base_filename = "%s-%s"%(q1_name.replace("/","_"),
-                q2_name.replace("/","_"))
-        # Add labels
-        label_resi(self.mutation_list)
-        label_resi(self.gly_del)
-        label_resi(self.gly_add)
-        label_resi(self.gly_share)
-
-        x_pos = -60
-        z_pos = 0
-        y_start = 0
-        y_offset = -5
-        create_label(x_pos, y_start, z_pos, "Mutations", "mutlabel", "yellow")
-        create_label(x_pos, y_start + y_offset, z_pos, "PNGS added", "glyaddlabel", "green")
-        create_label(x_pos, y_start + 2*y_offset , z_pos, "PNGS deleted", "glydellabel", "red")
-        create_label(x_pos, y_start + 3*y_offset, z_pos, "PNGS shared", "glysharelabel", "blue")
-        cmd.hide("everything", "extra_glycans")
-
-        create_label(0, 110, 0, "%s vs. %s"%(q1_name, q2_name), "strains", "white", label_size=-5)
-        return base_filename
 
 # Encoder for SequenceComparison serialization
 class SequenceComparisonEncoder(JSONEncoder):
@@ -170,6 +128,49 @@ class SequenceComparisonEncoder(JSONEncoder):
                 return sc
             return o.__dict__
 
+# Render a SequenceComparison
+def make_figure(sc):
+    q1_name = sc.seq1.name
+    q2_name = sc.seq2.name
+
+    mutations = [m.pymol_resi for m in sc.mutation_list if m.pymol_resi != "-"]
+    cmd.reinitialize()
+    cmd.set('ray_trace_mode', 0)
+
+    # Label parameters
+    cmd.set('label_position', (0, 0, 20))
+    cmd.set('label_size', -3)
+    cmd.set('label_color', 'black')
+    cmd.load(f"{DATA_DIR}/{sc.lineage}_pngs.pse")
+
+    # Color mutations
+    cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
+    cmd.color('yellow', 'mutations')
+
+    # Color glycosylations
+    color_pngs(sc.gly_del, "glycan_deletions", "red")
+    color_pngs(sc.gly_add, "glycan_additions", "green")
+    color_pngs(sc.gly_share, "glycans_shared", "blue")
+    base_filename = "%s-%s"%(q1_name.replace("/","_"),
+            q2_name.replace("/","_"))
+    # Add labels
+    label_resi(sc.mutation_list)
+    label_resi(sc.gly_del)
+    label_resi(sc.gly_add)
+    label_resi(sc.gly_share)
+
+    x_pos = -60
+    z_pos = 0
+    y_start = 0
+    y_offset = -5
+    create_label(x_pos, y_start, z_pos, "Mutations", "mutlabel", "yellow")
+    create_label(x_pos, y_start + y_offset, z_pos, "PNGS added", "glyaddlabel", "green")
+    create_label(x_pos, y_start + 2*y_offset , z_pos, "PNGS deleted", "glydellabel", "red")
+    create_label(x_pos, y_start + 3*y_offset, z_pos, "PNGS shared", "glysharelabel", "blue")
+    cmd.hide("everything", "extra_glycans")
+
+    create_label(0, 110, 0, "%s vs. %s"%(q1_name, q2_name), "strains", "white", label_size=-5)
+    return base_filename
 
 def color_pngs(glylist, name, color):
     if len(glylist) > 0:
@@ -179,6 +180,22 @@ def color_pngs(glylist, name, color):
         cmd.select(name, ' | '.join(PNGS_names_final))
         cmd.show("sticks", name)
         cmd.color(color, name)
+
+def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
+    cmd.pseudoatom(label_name)
+    cmd.label(selection = label_name, expression = f"'{label_text}'")
+    cmd.hide("wire", selection = label_name)
+    cmd.set("label_color", selection = label_name, value = label_color)
+    cmd.set("label_position", selection = label_name, value = [x,y,z])
+    cmd.set("label_size", selection = label_name, value = label_size)
+
+def label_resi(resilist):
+    for m in resilist:
+        label = m.label
+        resi = m.pymol_resi
+        if resi != "-":
+            cmd.select(label, 'n. CA and i. ' + resi)
+            cmd.label(selection = label, expression = f"'{label}'")
 
 def make_comparison_object(parameters):
     seq_file = parameters["seq_file"]
@@ -202,17 +219,3 @@ def make_comparison_object(parameters):
 
     return comparison
 
-def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
-    cmd.pseudoatom(label_name)
-    cmd.label(selection = label_name, expression = f"'{label_text}'")
-    cmd.hide("wire", selection = label_name)
-    cmd.set("label_color", selection = label_name, value = label_color)
-    cmd.set("label_position", selection = label_name, value = [x,y,z])
-    cmd.set("label_size", selection = label_name, value = label_size)
-def label_resi(resilist):
-    for m in resilist:
-        label = m.label
-        resi = m.pymol_resi
-        if resi != "-":
-            cmd.select(label, 'n. CA and i. ' + resi)
-            cmd.label(selection = label, expression = f"'{label}'")
