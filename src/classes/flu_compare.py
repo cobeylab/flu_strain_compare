@@ -5,7 +5,7 @@ from os import system
 import pandas as pd
 from pymol import cmd
 
-class flu_mutation:
+class FluMutation:
     def __init__(self,
         pymol_resi,
         label,
@@ -22,7 +22,7 @@ class flu_mutation:
     def __str__(self):
         return f"Strain 1: {self.strain1}, Strain 2: {self.strain2}, Mutation: {self.label}"
 
-class flu_pngs:
+class FluPngs:
     def __init__(self,
         pymol_resi,
         label):
@@ -31,7 +31,7 @@ class flu_pngs:
         self.pymol_resi = pymol_resi
         self.label = label
 
-class flu_seq:
+class FluSeq:
     def __init__(self,
         lineage,
         query_sequence_file,
@@ -62,10 +62,10 @@ class flu_seq:
         assert (len(newseq) == 1), "Alignment not found"
         self.sequence = newseq[0]
         
-class seq_compare:
+class SequenceComparison:
     def __init__(self, seq1, seq2, numbering_scheme):
-        assert (type(seq1) == flu_seq), "Seq1 must be a flu_seq object"
-        assert (type(seq2) == flu_seq), "Seq2 must be a flu_seq object"
+        assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
+        assert (type(seq2) == FluSeq), "Seq2 must be a FluSeq object"
         assert (seq1.lineage == seq2.lineage), "Cannot compare sequences from different lineages"
         self.seq1 = seq1
         self.seq2 = seq2
@@ -88,7 +88,7 @@ class seq_compare:
             if b1 != b2:
                 p = self.convert_numbering(i)
                 mutations_out.append(
-                    flu_mutation(pymol_resi = str(i+1),
+                    FluMutation(pymol_resi = str(i+1),
                         label = "".join([str(b1), str(p), str(b2)]),
                         strain1 = self.seq1.name,
                         strain2 = self.seq2.name)
@@ -105,7 +105,7 @@ class seq_compare:
         for pymol_position in comparison_set:
             conversion_index = int(pymol_position.replace("_","")) - 1
             label = "PNGS%s"%self.convert_numbering(conversion_index)
-            pngs_out.append(flu_pngs(pymol_resi = pymol_position,
+            pngs_out.append(FluPngs(pymol_resi = pymol_position,
                 label = label))
         return pngs_out
     
@@ -165,17 +165,17 @@ def make_comparison_object(parameters):
     q2_id = parameters["q2_id"]
     seq_lineage = parameters["seq_lineage"]
     numbering_scheme = parameters["numbering_scheme"]
-    s1 = flu_seq(
+    s1 = FluSeq(
         lineage = seq_lineage,
         query_sequence_file = seq_file,
         query_sequence_id = q1_id
         )
-    s2 = flu_seq(
+    s2 = FluSeq(
         lineage = seq_lineage,
         query_sequence_file = seq_file,
         query_sequence_id = q2_id
         )
-    comparison = seq_compare(seq1 = s1,
+    comparison = SequenceComparison(seq1 = s1,
         seq2 = s2,
         numbering_scheme = numbering_scheme)
     return comparison
