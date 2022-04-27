@@ -8,6 +8,9 @@ import numpy
 import json
 from json import JSONEncoder
 
+# Internal data directory
+DATA_DIR = "data"
+
 class FluMutation:
     def __init__(self,
         pymol_resi,
@@ -39,7 +42,7 @@ class FluSeq:
         lineage,
         query_sequence_file,
         query_sequence_id):
-        assert (exists(query_sequence_file)), "Query sequence file must exist"
+        assert (exists(query_sequence_file)), f"Query sequence file {query_sequence_file} does not exist"
         assert (type(lineage) == str), "Lineage must be a string."
         assert (type(query_sequence_id) == str), "Query sequence ID must be a string."
         query_seqs = {s.id: s for s in SeqIO.parse(query_sequence_file, "fasta")}
@@ -55,14 +58,14 @@ class FluSeq:
         self.pngs = [str(m.start() + 1) for m in gly.finditer(str(self.sequence.seq))]
         
     def align_to_reference(self):
-        ref_file = "data/%s_ref.fasta"%(self.lineage)
+        ref_file = f"{DATA_DIR}/{self.lineage}_ref.fasta"
         temp_seqfile = "figures/tmp.fasta"
         temp_alignfile = "figures/aligned.fasta"
         SeqIO.write([self.sequence], temp_seqfile, "fasta")
         command = "mafft --keeplength --add %s %s > %s"%(temp_seqfile, ref_file, temp_alignfile)
         system(command)
         newseq = [s for s in SeqIO.parse(temp_alignfile, "fasta") if s.id == self.sequence.id]
-        assert (len(newseq) == 1), "Alignment not found"
+        assert (len(newseq) == 1), f"Alignment {ref_file} not found"
         self.sequence = newseq[0]
         
 class SequenceComparison:
@@ -74,8 +77,9 @@ class SequenceComparison:
         self.seq2 = seq2
         self.lineage = seq1.lineage
         self.numbering_scheme = numbering_scheme
-        assert (exists("data/%s_Conversion.csv"%self.lineage)), "Conversion file does not exist"
-        self.conversion_table = pd.read_csv("data/%s_Conversion.csv"%self.lineage,
+        conversion_file = f"{DATA_DIR}/{self.lineage}_Conversion.csv"
+        assert (exists(conversion_file)), f"Conversion file {conversion_file} does not exist"
+        self.conversion_table = pd.read_csv(conversion_file,
             index_col = "ref_one_index")
         self.mutation_list = self.identify_mutations()
         self.gly_del = self.identify_PNGS_changes("deletions")
@@ -123,7 +127,7 @@ class SequenceComparison:
         cmd.set('label_position', (0, 0, 20))
         cmd.set('label_size', -3)
         cmd.set('label_color', 'black')
-        cmd.load('data/%s_pngs.pse'%self.lineage)
+        cmd.load(f"{DATA_DIR}/{self.lineage}_pngs.pse")
 
         # Color mutations
         cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
@@ -177,7 +181,7 @@ def color_pngs(glylist, name, color):
         cmd.color(color, name)
 
 def make_comparison_object(parameters):
-    seq_file = "data/" + parameters["seq_file"]
+    seq_file = parameters["seq_file"]
     q1_id = parameters["q1_id"]
     q2_id = parameters["q2_id"]
     seq_lineage = parameters["seq_lineage"]
