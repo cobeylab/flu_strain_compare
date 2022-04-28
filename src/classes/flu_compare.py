@@ -77,7 +77,6 @@ class FluSeq:
         # Clean up temp files
         os.remove(temp_seqfile)
         os.remove(temp_alignfile)
-        os.rmdir(TEMP_DIR)
 
 class SequenceComparison:
     def __init__(self, seq1, seq2, numbering_scheme):

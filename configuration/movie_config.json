@@ -1,7 +1,8 @@
 {
     "output_handle": "H3_vaccines",
-    "seq_file": "H3_cell_vaccines.fasta",
+    "seq_file": "sample_input/H3_cell_vaccines.fasta",
     "seq_lineage": "H3",
     "numbering_scheme": "H3",
-    "frame_order": ["EPI349103","EPI530687","EPI539576","EPI1106235","EPI1174043","EPI1409001","EPI1843589","EPI1885402"]
+    "frame_order": ["EPI349103","EPI530687","EPI539576","EPI1106235","EPI1174043","EPI1409001","EPI1843589","EPI1885402"],
+    "output_dir": "figures"
 }
