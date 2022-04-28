@@ -49,7 +49,7 @@ For Singularity:
 
 ```
 export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
-singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_latest.sif pymol -c /app/src/<SCRIPT NAME>.py
+singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_latest.sif python3 src/<SCRIPT NAME>.py
 ```
 
 In either case, `<SCRIPT NAME>` should either be `make_comparison_figure` or `make_movie`/
