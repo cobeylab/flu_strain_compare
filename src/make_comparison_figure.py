@@ -1,16 +1,16 @@
-import sys
-sys.path.append("/app/src/classes")
 from pymol.viewing import color
 from pymol import cmd
-from flu_compare import make_comparison_object
-import label_globals
+from classes.flu_compare import make_comparison_object, make_figure, SequenceComparisonEncoder
 import json
 
-parameters = json.load(open("/app/configuration/config.json"))
-figure_dir = "/app/figures/"
+parameters = json.load(open("configuration/config.json"))
+figure_dir = parameters["output_dir"]
 
 comparison = make_comparison_object(parameters)
-base_filename = comparison.make_figure()
+
+print(json.dumps(comparison, indent=4, cls=SequenceComparisonEncoder))
+
+base_filename = make_figure(comparison)
 
 # Save figures
 cmd.set("opaque_background", "on")

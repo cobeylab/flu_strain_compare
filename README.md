@@ -42,14 +42,14 @@ With your configuration file set up to your liking, you can just run the contain
 
 ```
 export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
-docker run -v ${flu_strain_compare_path}:/app flu_strain_compare <SCRIPT NAME>.py
+docker run -v ${flu_strain_compare_path}:/app flu_strain_compare python3 src/<SCRIPT NAME>.py
 ```
 
 For Singularity:
 
 ```
 export flu_strain_compare_path=<ABSOLUTE PATH TO REPO DIRECTORY>
-singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_latest.sif pymol -c /app/src/<SCRIPT NAME>.py
+singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_latest.sif python3 src/<SCRIPT NAME>.py
 ```
 
 In either case, `<SCRIPT NAME>` should either be `make_comparison_figure` or `make_movie`/
