@@ -187,9 +187,10 @@ def color_pngs(glylist, name, color):
         PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
         PNGS_names_final = set(PNGS_names).intersection(set(cmd.get_names(type="selections")))
         # Need to add warning here if it finds a PNGS site that isn't in the structure
-        cmd.select(name, ' | '.join(PNGS_names_final))
-        cmd.show("sticks", name)
-        cmd.color(color, name)
+        if len(PNGS_names_final) > 0:
+            cmd.select(name, ' | '.join(PNGS_names_final))
+            cmd.show("sticks", name)
+            cmd.color(color, name)
 
 def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
     cmd.pseudoatom(label_name)
