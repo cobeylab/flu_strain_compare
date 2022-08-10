@@ -1,9 +1,17 @@
+import __main__
+__main__.pymol_argv = [ 'pymol', '-q' ]
+
+import pymol
 from pymol.viewing import color
 from pymol import cmd
 from classes.flu_compare import make_comparison_object, make_figure, SequenceComparisonEncoder
 import json
 
 parameters = json.load(open("configuration/config.json"))
+
+if parameters["interactive"]:
+    pymol.finish_launching()
+
 figure_dir = parameters["output_dir"]
 
 comparison = make_comparison_object(parameters)
@@ -14,13 +22,14 @@ base_filename = make_figure(comparison)
 
 # Save figures
 cmd.set("opaque_background", "on")
+
 cmd.png('%s/%s.png'%(
-        figure_dir,
-        base_filename),
-    width=800,
-    height=800,
-    ray=1,
-    dpi=300)
+    figure_dir,
+    base_filename),
+width=800,
+height=800,
+ray=1,
+dpi=300)
 cmd.save('%s/%s.pse'%(
-        figure_dir,
-        base_filename))
+    figure_dir,
+    base_filename))
