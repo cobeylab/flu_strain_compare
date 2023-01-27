@@ -54,6 +54,12 @@ cp -r mmtf-cpp/include/mmtf* include/
 python3 setup.py install
 ```
 
+Or with Anaconda.
+
+1. Install [Anaconda](https://docs.anaconda.com/anaconda/install/index.html).
+2. Run `conda install -c conda-forge schrodinger pymol-bundle`
+
+
 ## Configuration
 
 The `configuration/config.json` file serves as input for the `make_comparison_figure.py` script.
