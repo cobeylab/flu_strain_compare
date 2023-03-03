@@ -20,9 +20,14 @@ cmd.rotate("x", "10")
 cmd.rotate("z", "20")
 
 # Rremove glycans
+# In the structure 4we8, the glycans can be identified as NAG, MAN, and BMA
 cmd.remove("resn NAG+MAN+BMA")
+
+# The loop below renumbers all the residues so that they match
+# Standard H3N2 numbering with position 1 beginning after the leader
+# peptide.
+
 resis = []
-#cmd.iterate("4we8", "print(resi, resn)")
 cmd.iterate("4we8", "if (resi, resn) not in resis:\n\tresis.append((resi, resn))")
 offset = 16
 for i, (r, aa) in enumerate(resis):

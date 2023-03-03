@@ -11,8 +11,13 @@ cmd.rotate("y", "15")
 cmd.rotate("x", "15")
 
 # Removing glycans
+# In this case, it was easier to remove residues that represented glycans and not actual amino acids
+# I figured this out manually when I first played around with this structure
 cmd.remove("chain G+H")
 cmd.remove("resi 400+401+402+403+407")
+
+# The following loops renumber the residues so that position 1 indicates the first
+# residue after the leader sequence.
 
 resis = []
 cmd.iterate("chain A", "if (resi, resn) not in resis:\n\tresis.append((resi, resn))")
