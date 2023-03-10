@@ -2,8 +2,9 @@ from pymol.viewing import color
 from pymol import cmd
 from classes.flu_compare import make_comparison_object, make_figure, SequenceComparisonEncoder
 import json
+import sys
 
-parameters = json.load(open("configuration/config.json"))
+parameters = json.load(open(sys.argv[1]))
 figure_dir = parameters["output_dir"]
 
 comparison = make_comparison_object(parameters)

@@ -29,6 +29,28 @@ class FluMutation:
     def __str__(self):
         return f"Strain 1: {self.strain1}, Strain 2: {self.strain2}, Mutation: {self.label}"
 
+class FluMutationMultiWay:
+    def __init__(self,
+        pymol_resi,
+        label,
+        strain1,
+        strain2,
+        strain3):
+        assert (type(pymol_resi) == str), "Position must be a string"
+        assert (type(label) == str), "Mutation must be identified as a string"
+        assert (type(strain1) == str), "Strain 1 must be a string identifier"
+        assert (type(strain2) == str), "Strain 2 must be a string identifier"
+        assert (type(strain3) == str), "Strain 3 must be a string identifier"
+        self.pymol_resi = pymol_resi
+        self.label = label
+        self.strain1 = strain1
+        self.strain2 = strain2
+        self.strain3 = strain3
+    def __str__(self):
+        return f"Strain 1: {self.strain1}, Strain 2: {self.strain2}, Strain 3: {self.strain3}, Mutation: {self.label}"
+
+
+
 class FluPngs:
     def __init__(self,
         pymol_resi,
@@ -70,6 +92,7 @@ class FluSeq:
         SeqIO.write([self.sequence], temp_seqfile, "fasta")
         command = "mafft --keeplength --add %s %s > %s"%(temp_seqfile, ref_file, temp_alignfile)
         system(command)
+
         newseq = [s for s in SeqIO.parse(temp_alignfile, "fasta") if s.id == self.sequence.id]
         assert (len(newseq) == 1), f"Alignment {ref_file} not found"
         self.sequence = newseq[0]
@@ -79,12 +102,14 @@ class FluSeq:
         os.remove(temp_alignfile)
 
 class SequenceComparison:
-    def __init__(self, seq1, seq2, numbering_scheme):
+    def __init__(self, seq1, seq2, seq3, numbering_scheme):
         assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
         assert (type(seq2) == FluSeq), "Seq2 must be a FluSeq object"
-        assert (seq1.lineage == seq2.lineage), "Cannot compare sequences from different lineages"
+        assert (type(seq3) == FluSeq), "Seq3 must be a FluSeq object"
+        assert (seq1.lineage == seq2.lineage == seq3.lineage), "Cannot compare sequences from different lineages"
         self.seq1 = seq1
         self.seq2 = seq2
+        self.seq3 = seq3
         self.lineage = seq1.lineage
         self.numbering_scheme = numbering_scheme
         conversion_file = f"{DATA_DIR}/{self.lineage}_Conversion.csv"
@@ -101,23 +126,24 @@ class SequenceComparison:
 
     def identify_mutations(self):
         mutations_out = []
-        for i, (b1, b2) in enumerate(zip(self.seq1.sequence.seq, self.seq2.sequence.seq)):
-            if b1 != b2:
+        for i, (b1, b2, b3) in enumerate(zip(self.seq1.sequence.seq, self.seq2.sequence.seq, self.seq3.sequence.seq)):
+            if not (b1 == b2 == b3):
                 p = self.convert_numbering(i)
                 mutations_out.append(
-                    FluMutation(pymol_resi = str(i+1),
+                    FluMutationMultiWay(pymol_resi = str(i+1),
                         label = "".join([str(b1), str(p), str(b2)]),
                         strain1 = self.seq1.name,
-                        strain2 = self.seq2.name)
+                        strain2 = self.seq2.name,
+                        strain3 = self.seq3.name)
                 )
         return mutations_out
     def identify_PNGS_changes(self, change_type):
         if change_type == "deletions":
-            comparison_set = set(self.seq1.pngs) - set(self.seq2.pngs)
+            comparison_set = (set(self.seq1.pngs) - set(self.seq2.pngs)) | (set(self.seq1.pngs) - set(self.seq3.pngs))
         elif change_type == "additions":
-            comparison_set = set(self.seq2.pngs) - set(self.seq1.pngs)
+            comparison_set = set(self.seq2.pngs).intersection(set(self.seq3.pngs)) - set(self.seq1.pngs)
         elif change_type == "shared":
-            comparison_set = set(self.seq2.pngs).intersection(set(self.seq1.pngs))
+            comparison_set = set(self.seq1.pngs).intersection(set(self.seq2.pngs)).intersection(set(self.seq3.pngs))
         pngs_out = []
         for pymol_position in comparison_set:
             conversion_index = int(pymol_position.replace("_","")) - 1
@@ -142,6 +168,7 @@ class SequenceComparisonEncoder(JSONEncoder):
 def make_figure(sc):
     q1_name = sc.seq1.name
     q2_name = sc.seq2.name
+    q3_name = sc.seq3.name
 
     mutations = [m.pymol_resi for m in sc.mutation_list if m.pymol_resi != "-"]
     cmd.reinitialize()
@@ -161,8 +188,8 @@ def make_figure(sc):
     color_pngs(sc.gly_del, "glycan_deletions", "red")
     color_pngs(sc.gly_add, "glycan_additions", "green")
     color_pngs(sc.gly_share, "glycans_shared", "blue")
-    base_filename = "%s-%s"%(q1_name.replace("/","_"),
-            q2_name.replace("/","_"))
+    base_filename = "%s-%s-%s"%(q1_name.replace("/","_"),
+            q2_name.replace("/","_"), q3_name.replace("/","_"))
     # Add labels
     label_resi(sc.mutation_list)
     label_resi(sc.gly_del)
@@ -179,7 +206,7 @@ def make_figure(sc):
     create_label(x_pos, y_start + 3*y_offset, z_pos, "PNGS shared", "glysharelabel", "blue")
     cmd.hide("everything", "extra_glycans")
 
-    create_label(0, 110, 0, "%s vs. %s"%(q1_name, q2_name), "strains", "white", label_size=-5)
+    create_label(0, 110, 0, "%s vs. %s vs. %s"%(q1_name, q2_name, q3_name), "strains", "white", label_size=-5)
     return base_filename
 
 def color_pngs(glylist, name, color):
@@ -212,20 +239,28 @@ def make_comparison_object(parameters):
     seq_file = parameters["seq_file"]
     q1_id = parameters["q1_id"]
     q2_id = parameters["q2_id"]
+    q3_id = parameters["q3_id"]
     seq_lineage = parameters["seq_lineage"]
     numbering_scheme = parameters["numbering_scheme"]
     s1 = FluSeq(
         lineage = seq_lineage,
         query_sequence_file = seq_file,
-        query_sequence_id = q1_id
+        query_sequence_id = q1_id,
         )
     s2 = FluSeq(
         lineage = seq_lineage,
         query_sequence_file = seq_file,
-        query_sequence_id = q2_id
+        query_sequence_id = q2_id,
         )
+    s3 = FluSeq(
+        lineage = seq_lineage,
+        query_sequence_file = seq_file,
+        query_sequence_id = q3_id,
+        )
+
     comparison = SequenceComparison(seq1 = s1,
         seq2 = s2,
+        seq3 = s3,
         numbering_scheme = numbering_scheme)
 
     return comparison
