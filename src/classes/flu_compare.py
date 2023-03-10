@@ -72,7 +72,7 @@ class FluSeq:
         assert (len(query_seqs) >= 1), "Query sequence file must contain at least 1 sequence."
         self.lineage = lineage
         self.sequence = query_seqs[query_sequence_id]
-        self.name = self.sequence.description.split(" | ")[1]
+        self.name = self.sequence.description.split(" | ")[0]
         self.query_sequence_file = query_sequence_file
         self.align_to_reference()
 
