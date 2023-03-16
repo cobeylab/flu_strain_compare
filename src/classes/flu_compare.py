@@ -32,22 +32,13 @@ class FluMutation:
 class FluMutationMultiWay:
     def __init__(self,
         pymol_resi,
-        label,
-        strain1,
-        strain2,
-        strain3):
+        label):
         assert (type(pymol_resi) == str), "Position must be a string"
         assert (type(label) == str), "Mutation must be identified as a string"
-        assert (type(strain1) == str), "Strain 1 must be a string identifier"
-        assert (type(strain2) == str), "Strain 2 must be a string identifier"
-        assert (type(strain3) == str), "Strain 3 must be a string identifier"
         self.pymol_resi = pymol_resi
         self.label = label
-        self.strain1 = strain1
-        self.strain2 = strain2
-        self.strain3 = strain3
     def __str__(self):
-        return f"Strain 1: {self.strain1}, Strain 2: {self.strain2}, Strain 3: {self.strain3}, Mutation: {self.label}"
+        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}"
 
 
 
@@ -102,14 +93,12 @@ class FluSeq:
         os.remove(temp_alignfile)
 
 class SequenceComparison:
-    def __init__(self, seq1, seq2, seq3, numbering_scheme):
+    def __init__(self, seq1, comparisons, numbering_scheme):
         assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
-        assert (type(seq2) == FluSeq), "Seq2 must be a FluSeq object"
-        assert (type(seq3) == FluSeq), "Seq3 must be a FluSeq object"
-        assert (seq1.lineage == seq2.lineage == seq3.lineage), "Cannot compare sequences from different lineages"
+        assert (type(comparisons) == list), "comparisons must be a list"
+        assert len({s.lineage for s in comparisons} | {seq1.lineage }), "Cannot compare sequences from different lineages"
         self.seq1 = seq1
-        self.seq2 = seq2
-        self.seq3 = seq3
+        self.comparisons = comparisons
         self.lineage = seq1.lineage
         self.numbering_scheme = numbering_scheme
         conversion_file = f"{DATA_DIR}/{self.lineage}_Conversion.csv"
@@ -125,25 +114,34 @@ class SequenceComparison:
         return self.conversion_table.loc[position + 1, self.numbering_scheme]
 
     def identify_mutations(self):
+        # Put sequences in one list
+        sequences = [self.seq1.sequence.seq]
+        comparisons = [x.sequence.seq for x in self.comparisons]
+        sequences.extend(comparisons)
+
         mutations_out = []
-        for i, (b1, b2, b3) in enumerate(zip(self.seq1.sequence.seq, self.seq2.sequence.seq, self.seq3.sequence.seq)):
-            if not (b1 == b2 == b3):
+        for i, sites in enumerate(zip(*sequences)):
+            if not len(set(sites)) == 1:
                 p = self.convert_numbering(i)
                 mutations_out.append(
                     FluMutationMultiWay(pymol_resi = str(i+1),
-                        label = "".join([str(b1), str(p), str(b2)]),
-                        strain1 = self.seq1.name,
-                        strain2 = self.seq2.name,
-                        strain3 = self.seq3.name)
+                        label = "".join(list(sites) + [str(p)])
+                        )
                 )
         return mutations_out
     def identify_PNGS_changes(self, change_type):
         if change_type == "deletions":
-            comparison_set = (set(self.seq1.pngs) - set(self.seq2.pngs)) | (set(self.seq1.pngs) - set(self.seq3.pngs))
+            comparison_set = set()
+            for comp in self.comparisons:
+                comparison_set = comparison_set | set(self.seq1.pngs) - set(comp.pngs)
         elif change_type == "additions":
-            comparison_set = set(self.seq2.pngs).intersection(set(self.seq3.pngs)) - set(self.seq1.pngs)
+            comparison_set = set()
+            for comp in self.comparisons:
+                comparison_set = comparison_set | set(comp.pngs) - set(self.seq1.pngs).intersection(set(comp.pngs))
         elif change_type == "shared":
-            comparison_set = set(self.seq1.pngs).intersection(set(self.seq2.pngs)).intersection(set(self.seq3.pngs))
+            comparison_set = set(self.seq1.pngs)
+            for comp in self.comparisons:
+                comparison_set = comparison_set.intersection(comp.pngs)
         pngs_out = []
         for pymol_position in comparison_set:
             conversion_index = int(pymol_position.replace("_","")) - 1
@@ -166,10 +164,7 @@ class SequenceComparisonEncoder(JSONEncoder):
 
 # Render a SequenceComparison
 def make_figure(sc):
-    q1_name = sc.seq1.name
-    q2_name = sc.seq2.name
-    q3_name = sc.seq3.name
-
+    names = [sc.seq1.name] + [s.name for s in sc.comparisons]
     mutations = [m.pymol_resi for m in sc.mutation_list if m.pymol_resi != "-"]
     cmd.reinitialize()
     cmd.set('ray_trace_mode', 0)
@@ -188,8 +183,8 @@ def make_figure(sc):
     color_pngs(sc.gly_del, "glycan_deletions", "red")
     color_pngs(sc.gly_add, "glycan_additions", "green")
     color_pngs(sc.gly_share, "glycans_shared", "blue")
-    base_filename = "%s-%s-%s"%(q1_name.replace("/","_"),
-            q2_name.replace("/","_"), q3_name.replace("/","_"))
+    # TODO: if number of sequences is reasonable...
+    base_filename = "-".join([n.replace("/", "_") for n in names])
     # Add labels
     label_resi(sc.mutation_list)
     label_resi(sc.gly_del)
@@ -206,7 +201,7 @@ def make_figure(sc):
     create_label(x_pos, y_start + 3*y_offset, z_pos, "PNGS shared", "glysharelabel", "blue")
     cmd.hide("everything", "extra_glycans")
 
-    create_label(0, 110, 0, "%s vs. %s vs. %s"%(q1_name, q2_name, q3_name), "strains", "white", label_size=-5)
+    create_label(0, 110, 0, " vs. ".join(names), "strains", "white", label_size=-5)
     return base_filename
 
 def color_pngs(glylist, name, color):
@@ -237,30 +232,27 @@ def label_resi(resilist):
 
 def make_comparison_object(parameters):
     seq_file = parameters["seq_file"]
-    q1_id = parameters["q1_id"]
-    q2_id = parameters["q2_id"]
-    q3_id = parameters["q3_id"]
+    reference_id = parameters["reference_id"]
+    comparison_ids = parameters["comparison_ids"]
     seq_lineage = parameters["seq_lineage"]
     numbering_scheme = parameters["numbering_scheme"]
     s1 = FluSeq(
         lineage = seq_lineage,
         query_sequence_file = seq_file,
-        query_sequence_id = q1_id,
+        query_sequence_id = reference_id,
         )
-    s2 = FluSeq(
-        lineage = seq_lineage,
-        query_sequence_file = seq_file,
-        query_sequence_id = q2_id,
-        )
-    s3 = FluSeq(
-        lineage = seq_lineage,
-        query_sequence_file = seq_file,
-        query_sequence_id = q3_id,
-        )
+    comparisons = []
+    for c_id in comparison_ids:
+        seq = FluSeq(
+            lineage = seq_lineage,
+            query_sequence_file = seq_file,
+            query_sequence_id = c_id,
+            )
+
+        comparisons.append(seq)
 
     comparison = SequenceComparison(seq1 = s1,
-        seq2 = s2,
-        seq3 = s3,
+        comparisons = comparisons,
         numbering_scheme = numbering_scheme)
 
     return comparison
