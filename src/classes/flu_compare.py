@@ -40,8 +40,6 @@ class FluMutationMultiWay:
     def __str__(self):
         return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}"
 
-
-
 class FluPngs:
     def __init__(self,
         pymol_resi,
@@ -52,8 +50,14 @@ class FluPngs:
         self.pymol_resi = pymol_resi
         self.label = label
         self.percent_conserved = percent_conserved
+
     def __str__(self):
         return f"PNGS: {self.pymol_resi}, Label: {self.label}, Conserved: {self.percent_conserved}"
+
+    def __eq__(self, other):
+        if isinstance(self, other.__class__):
+            return self.pymol_resi == other.pymol_resi and self.label == other.label and self.percent_conserved == other.percent_conserved
+        return False
 
 
 class FluSeq:
@@ -75,7 +79,7 @@ class FluSeq:
         # Get PNGS sites
         gly = re.compile("N[-]*[A-O,Q-Z][-]*[S,T]")
         self.pngs = [str(m.start() + 1) for m in gly.finditer(str(self.sequence.seq))]
-        
+
     def align_to_reference(self):
         ref_file = f"{DATA_DIR}/{self.lineage}_ref.fasta"
 
@@ -163,20 +167,8 @@ class SequenceComparison:
 
     def identify_PNGS_no_reference(self):
         all_comparisons = self.comparisons + [self.seq1]
-        comparison_set = set()
-        for comp in all_comparisons:
-            comparison_set = comparison_set | set(comp.pngs)
-
-        pngs_out = []
-        num_comparisons = len(all_comparisons)
-        for pymol_position in comparison_set:
-            conversion_index = int(pymol_position.replace("_","")) - 1
-            label = "PNGS%s"%self.convert_numbering(conversion_index)
-            percent_conserved = sum([pymol_position in comp.pngs for comp in all_comparisons])/num_comparisons
-            pngs_out.append(FluPngs(pymol_resi = pymol_position,
-                label = label, percent_conserved = percent_conserved))
-
-        return pngs_out
+        all_comparisons_pngs = [set(c.pngs) for c in all_comparisons]
+        return compare_seq_no_reference(all_comparisons_pngs, self.convert_numbering)
 
 # Encoder for SequenceComparison serialization
 class SequenceComparisonEncoder(JSONEncoder):
@@ -189,6 +181,23 @@ class SequenceComparisonEncoder(JSONEncoder):
                 sc.pop("conversion_table")
                 return sc
             return o.__dict__
+
+def compare_seq_no_reference(comparisons, convert):
+    comparison_set = set()
+    for comp in comparisons:
+        comparison_set = comparison_set | comp
+
+    pngs_out = []
+    num_comparisons = len(comparison_set)
+    for pymol_position in comparison_set:
+        conversion_index = int(pymol_position.replace("_","")) - 1
+        label = "PNGS%s"%convert(conversion_index)
+        percent_conserved = sum([pymol_position in comp for comp in comparisons])/num_comparisons
+        pngs_out.append(FluPngs(pymol_resi = pymol_position,
+            label = label, percent_conserved = percent_conserved))
+
+    return pngs_out
+
 
 # Render a SequenceComparison
 def make_figure(sc):
