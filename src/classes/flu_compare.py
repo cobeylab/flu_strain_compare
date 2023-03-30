@@ -45,11 +45,16 @@ class FluMutationMultiWay:
 class FluPngs:
     def __init__(self,
         pymol_resi,
-        label):
+        label,
+        percent_conserved):
         assert (type(pymol_resi) == str), "Position must be a string"
         assert (type(label) == str), "Label must be identified as a string"
         self.pymol_resi = pymol_resi
         self.label = label
+        self.percent_conserved = percent_conserved
+    def __str__(self):
+        return f"PNGS: {self.pymol_resi}, Label: {self.label}, Conserved: {self.percent_conserved}"
+
 
 class FluSeq:
     def __init__(self,
@@ -93,7 +98,7 @@ class FluSeq:
         os.remove(temp_alignfile)
 
 class SequenceComparison:
-    def __init__(self, seq1, comparisons, numbering_scheme):
+    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode):
         assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
         assert (type(comparisons) == list), "comparisons must be a list"
         assert len({s.lineage for s in comparisons} | {seq1.lineage }), "Cannot compare sequences from different lineages"
@@ -106,9 +111,14 @@ class SequenceComparison:
         self.conversion_table = pd.read_csv(conversion_file,
             index_col = "ref_one_index")
         self.mutation_list = self.identify_mutations()
-        self.gly_del = self.identify_PNGS_changes("deletions")
-        self.gly_add = self.identify_PNGS_changes("additions")
-        self.gly_share = self.identify_PNGS_changes("shared")
+        self.reference_mode = reference_mode
+        if self.reference_mode:
+            self.gly_del = self.identify_PNGS_changes("deletions")
+            self.gly_add = self.identify_PNGS_changes("additions")
+            self.gly_share = self.identify_PNGS_changes("shared")
+        else:
+            self.gly_no_reference = self.identify_PNGS_no_reference()
+
     def convert_numbering(self,
         position):
         return self.conversion_table.loc[position + 1, self.numbering_scheme]
@@ -129,6 +139,7 @@ class SequenceComparison:
                         )
                 )
         return mutations_out
+
     def identify_PNGS_changes(self, change_type):
         if change_type == "deletions":
             comparison_set = set()
@@ -147,7 +158,24 @@ class SequenceComparison:
             conversion_index = int(pymol_position.replace("_","")) - 1
             label = "PNGS%s"%self.convert_numbering(conversion_index)
             pngs_out.append(FluPngs(pymol_resi = pymol_position,
-                label = label))
+                label = label, percent_conserved = None))
+        return pngs_out
+
+    def identify_PNGS_no_reference(self):
+        all_comparisons = self.comparisons + [self.seq1]
+        comparison_set = set()
+        for comp in all_comparisons:
+            comparison_set = comparison_set | set(comp.pngs)
+
+        pngs_out = []
+        num_comparisons = len(all_comparisons)
+        for pymol_position in comparison_set:
+            conversion_index = int(pymol_position.replace("_","")) - 1
+            label = "PNGS%s"%self.convert_numbering(conversion_index)
+            percent_conserved = sum([pymol_position in comp.pngs for comp in all_comparisons])/num_comparisons
+            pngs_out.append(FluPngs(pymol_resi = pymol_position,
+                label = label, percent_conserved = percent_conserved))
+
         return pngs_out
 
 # Encoder for SequenceComparison serialization
@@ -180,25 +208,37 @@ def make_figure(sc):
     cmd.color('yellow', 'mutations')
 
     # Color glycosylations
-    color_pngs(sc.gly_del, "glycan_deletions", "red")
-    color_pngs(sc.gly_add, "glycan_additions", "green")
-    color_pngs(sc.gly_share, "glycans_shared", "blue")
-    # TODO: if number of sequences is reasonable...
-    base_filename = "-".join([n.replace("/", "_") for n in names])
+    if sc.reference_mode:
+        color_pngs(sc.gly_del, "glycan_deletions", "red")
+        color_pngs(sc.gly_add, "glycan_additions", "green")
+        color_pngs(sc.gly_share, "glycans_shared", "blue")
+    else:
+        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", "red")
+
+    # Name file with the first 3 strains.
+    base_filename = "-".join([n.replace("/", "_") for n in names[:3]])
+    names_len = len(names)
+    if names_len > 3:
+        base_filename += f"-{names_len - 4}_others"
+
     # Add labels
     label_resi(sc.mutation_list)
-    label_resi(sc.gly_del)
-    label_resi(sc.gly_add)
-    label_resi(sc.gly_share)
+    if sc.reference_mode:
+        label_resi(sc.gly_del)
+        label_resi(sc.gly_add)
+        label_resi(sc.gly_share)
 
-    x_pos = -60
-    z_pos = 0
-    y_start = 0
-    y_offset = -5
-    create_label(x_pos, y_start, z_pos, "Mutations", "mutlabel", "yellow")
-    create_label(x_pos, y_start + y_offset, z_pos, "PNGS added", "glyaddlabel", "green")
-    create_label(x_pos, y_start + 2*y_offset , z_pos, "PNGS deleted", "glydellabel", "red")
-    create_label(x_pos, y_start + 3*y_offset, z_pos, "PNGS shared", "glysharelabel", "blue")
+        x_pos = -60
+        z_pos = 0
+        y_start = 0
+        y_offset = -5
+        create_label(x_pos, y_start, z_pos, "Mutations", "mutlabel", "yellow")
+        create_label(x_pos, y_start + y_offset, z_pos, "PNGS added", "glyaddlabel", "green")
+        create_label(x_pos, y_start + 2*y_offset , z_pos, "PNGS deleted", "glydellabel", "red")
+        create_label(x_pos, y_start + 3*y_offset, z_pos, "PNGS shared", "glysharelabel", "blue")
+    else:
+        label_resi(sc.gly_no_reference)
+
     cmd.hide("everything", "extra_glycans")
 
     create_label(0, 110, 0, " vs. ".join(names), "strains", "white", label_size=-5)
@@ -213,6 +253,20 @@ def color_pngs(glylist, name, color):
             cmd.select(name, ' | '.join(PNGS_names_final))
             cmd.show("sticks", name)
             cmd.color(color, name)
+
+def color_pngs_no_reference(glylist, name, color):
+    if len(glylist) > 0:
+        PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
+        PNGS_names_final = set(PNGS_names).intersection(set(cmd.get_names(type="selections")))
+        # Need to add warning here if it finds a PNGS site that isn't in the structure
+        if len(PNGS_names_final) > 0:
+            cmd.select(name, ' | '.join(PNGS_names_final))
+            cmd.show("sticks", name)
+
+        for g in glylist:
+            cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
+            cmd.set_color("color_" + g.pymol_resi, [1 - g.percent_conserved, 0.0, 0.0])
+            cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
 
 def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
     cmd.pseudoatom(label_name)
@@ -236,6 +290,8 @@ def make_comparison_object(parameters):
     comparison_ids = parameters["comparison_ids"]
     seq_lineage = parameters["seq_lineage"]
     numbering_scheme = parameters["numbering_scheme"]
+    reference_mode = parameters["reference_mode"]
+
     s1 = FluSeq(
         lineage = seq_lineage,
         query_sequence_file = seq_file,
@@ -253,7 +309,9 @@ def make_comparison_object(parameters):
 
     comparison = SequenceComparison(seq1 = s1,
         comparisons = comparisons,
-        numbering_scheme = numbering_scheme)
+        numbering_scheme = numbering_scheme,
+        reference_mode = reference_mode
+        )
 
     return comparison
 
