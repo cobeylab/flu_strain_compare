@@ -213,8 +213,9 @@ def make_figure(sc):
     cmd.load(f"{DATA_DIR}/{sc.lineage}_pngs.pse")
 
     # Color mutations
-    cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
-    cmd.color('yellow', 'mutations')
+    if len(mutations) > 0:
+        cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
+        cmd.color('yellow', 'mutations')
 
     # Color glycosylations
     if sc.reference_mode:
