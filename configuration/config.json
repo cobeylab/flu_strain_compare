@@ -1,8 +1,9 @@
 {
         "seq_file": "sample_input/H3_cell_vaccines.fasta",
-        "q1_id": "EPI1752480",
-        "q2_id": "EPI1928379",
+        "reference_id": "A/Cambodia/e0826360/2020",
+        "comparison_ids": ["A/Michigan/15/2021", "A/Victoria/361/2011", "A/Minnesota/41/2019", "A/Darwin/6/2021"],
         "seq_lineage": "H3",
         "numbering_scheme": "H3",
-        "output_dir": "figures"
+        "output_dir": "figures",
+        "reference_mode": false
 }

@@ -86,19 +86,19 @@ With your configuration file set up to your liking, run the container with the f
 
 
 ```
-docker run -v ${flu_strain_compare_path}:/app flu_strain_compare python3 src/<SCRIPT NAME>.py
+docker run -v ${flu_strain_compare_path}:/app flu_strain_compare python3 src/<SCRIPT NAME>.py configuration/config.json
 ```
 
 ### Singularity
 
 ```
-singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_latest.sif python3 src/<SCRIPT NAME>.py
+singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_latest.sif python3 src/<SCRIPT NAME>.py configuration/config.json
 ```
 
 ### Native
 
 ```
-python src/<SCRIPT NAME>.py
+python src/<SCRIPT NAME>.py configuration/config.json
 ```
 
 `<SCRIPT NAME>` should either be `make_comparison_figure` or `make_movie`
@@ -108,7 +108,7 @@ Example:
 
 ```
 # from repo root
-singularity exec --bind /home/youruser/flu_strain_compare:/app ubuntu_pymol_biopython.sif python3 src/make_movie.py
+singularity exec --bind /home/youruser/flu_strain_compare:/app ubuntu_pymol_biopython.sif python3 src/make_movie.py configuration/config.json
 ```
 
 ## Outputs
