@@ -115,6 +115,16 @@ singularity exec --bind /home/youruser/flu_strain_compare:/app ubuntu_pymol_biop
 
 Outputs from both scripts will be written to the `figures` directory of the repository.
 
+
+
+## Unit tests
+
+```
+
+pytest
+
+```
+
 ## Strains available
 ### H3
 * 2021-2022 southern hemisphere cell-based recommendation (name = `A/Darwin/6/2021`, id = `EPI1885402`)
