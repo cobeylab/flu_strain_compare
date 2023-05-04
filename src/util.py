@@ -21,7 +21,13 @@ aromatic = {'F', 'W', 'Y'}
 aliphatic = {'A', 'V', 'I', 'L'}
 hydroxyl = {'S', 'T'}
 amines = {'N', 'Q'}
-AA_GROUPS = [positive, negative, aromatic, aliphatic, hydroxyl, amines]
+g = {'G'}
+c = {'C'}
+p = {'P'}
+m = {'M'}
+
+
+AA_GROUPS = [positive, negative, aromatic, aliphatic, hydroxyl, amines, g, c, p, m]
 
 
 # Convert three-letter amino acid sequence to one-letter.

@@ -39,4 +39,12 @@ def test_conservative_true():
 def test_conservative_false():
     assert(conservative('H', 'F') == False)
 
+def test_single_conservative_true():
+    assert(conservative('G', 'G') == True)
+
+def test_single_conservative_false():
+    assert(conservative('G', 'S') == False)
+
+
+
 
