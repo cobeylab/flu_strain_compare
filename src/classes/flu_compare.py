@@ -8,6 +8,7 @@ import numpy
 import json
 from json import JSONEncoder
 
+from util import yrb
 
 # Internal data directory
 DATA_DIR = "data"
@@ -215,7 +216,15 @@ def make_figure(sc):
     # Color mutations
     if len(mutations) > 0:
         cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
-        cmd.color('yellow', 'mutations')
+
+        # Use yrb coloring
+        yrb()
+        cmd.set('transparency', 0.8)
+        # transparency will show inner cartoon
+        cmd.hide('cartoon')
+        cmd.hide('labels')
+        cmd.set('transparency', 0, 'mutations')
+        #cmd.color('yellow', 'mutations')
 
     # Color glycosylations
     if sc.reference_mode:
@@ -249,7 +258,10 @@ def make_figure(sc):
     else:
         label_resi(sc.gly_no_reference)
 
-    cmd.hide("everything", "extra_glycans")
+    try:
+        cmd.hide("everything", "extra_glycans")
+    except:
+        print("Error hiding extra glycans.")
 
     create_label(0, 110, 0, " vs. ".join(names), "strains", "white", label_size=-5)
     return base_filename
@@ -274,9 +286,13 @@ def color_pngs_no_reference(glylist, name, color):
             cmd.show("sticks", name)
 
         for g in glylist:
-            cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
-            cmd.set_color("color_" + g.pymol_resi, [1 - g.percent_conserved, 0.0, 0.0])
-            cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
+            try:
+                cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
+                cmd.set_color("color_" + g.pymol_resi, [1 - g.percent_conserved, 0.0, 0.0])
+                cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
+
+            except:
+                print(f"Error in selection {g}.")
 
 def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
     cmd.pseudoatom(label_name)
