@@ -222,7 +222,6 @@ def make_figure(sc):
         cmd.set('transparency', 0.8)
         # transparency will show inner cartoon
         cmd.hide('cartoon')
-        cmd.hide('labels')
         cmd.set('transparency', 0, 'mutations')
         #cmd.color('yellow', 'mutations')
 
@@ -264,6 +263,8 @@ def make_figure(sc):
         print("Error hiding extra glycans.")
 
     create_label(0, 110, 0, " vs. ".join(names), "strains", "white", label_size=-5)
+    # Hide labels (can be shown in .pse file)
+    cmd.hide('labels')
     return base_filename
 
 def color_pngs(glylist, name, color):

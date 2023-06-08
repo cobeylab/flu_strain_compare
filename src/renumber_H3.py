@@ -35,4 +35,4 @@ for i, (r, aa) in enumerate(resis):
 		new_resi = str(int(r)+offset)
 		cmd.alter("resi %s and resn %s"%(r,aa), "resi='%s_'"%(new_resi))
 cmd.iterate("4we8", "print(resi, resn)")
-cmd.save("../data/H3_renumbered.pse")
+cmd.save("data/H3_renumbered.pse")
