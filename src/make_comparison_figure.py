@@ -15,13 +15,19 @@ base_filename = make_figure(comparison)
 
 # Save figures
 cmd.set("opaque_background", "on")
-cmd.png('%s/%s.png'%(
-        figure_dir,
-        base_filename),
-    width=800,
-    height=800,
-    ray=1,
-    dpi=300)
-cmd.save('%s/%s.pse'%(
-        figure_dir,
-        base_filename))
+
+exports = parameters["export_files"]
+
+if "PNG" in (e.upper() for e in exports):
+    cmd.png('%s/%s.png'%(
+            figure_dir,
+            base_filename),
+        width=800,
+        height=800,
+        ray=1,
+        dpi=300)
+
+if "PSE" in (e.upper() for e in exports):
+    cmd.save('%s/%s.pse'%(
+            figure_dir,
+            base_filename))
