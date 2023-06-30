@@ -6,5 +6,6 @@
         "numbering_scheme": "H3",
         "output_dir": "figures",
         "reference_mode": false,
-        "export_files": ["PSE", "PNG"]
+        "export_files": ["PSE"],
+        "filter_sites": [92, 94, 104]
 }
