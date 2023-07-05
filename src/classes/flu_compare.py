@@ -101,8 +101,11 @@ class FluSeq:
         os.remove(temp_seqfile)
         os.remove(temp_alignfile)
 
+    def __str__(self):
+        return f"Name: {self.name}, Lineage: {self.lineage}, Query Sequence File: {self.query_sequence_file}, PNGS: {self.pngs}"
+
 class SequenceComparison:
-    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode):
+    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode, filter_sites):
         assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
         assert (type(comparisons) == list), "comparisons must be a list"
         assert len({s.lineage for s in comparisons} | {seq1.lineage }), "Cannot compare sequences from different lineages"
@@ -114,6 +117,7 @@ class SequenceComparison:
         assert (os.path.exists(conversion_file)), f"Conversion file {conversion_file} does not exist"
         self.conversion_table = pd.read_csv(conversion_file,
             index_col = "ref_one_index")
+        self.filter_sites = [str(f) for f in filter_sites]
         self.mutation_list = self.identify_mutations()
         self.reference_mode = reference_mode
         if self.reference_mode:
@@ -137,11 +141,12 @@ class SequenceComparison:
         for i, sites in enumerate(zip(*sequences)):
             if not len(set(sites)) == 1:
                 p = self.convert_numbering(i)
-                mutations_out.append(
-                    FluMutationMultiWay(pymol_resi = str(i+1),
-                        label = "".join(list(sites) + [str(p)])
-                        )
-                )
+                if not p in self.filter_sites:
+                    mutations_out.append(
+                        FluMutationMultiWay(pymol_resi = str(i+1),
+                            label = "".join(list(sites) + [str(p)])
+                            )
+                    )
         return mutations_out
 
     def identify_PNGS_changes(self, change_type):
@@ -157,6 +162,10 @@ class SequenceComparison:
             comparison_set = set(self.seq1.pngs)
             for comp in self.comparisons:
                 comparison_set = comparison_set.intersection(comp.pngs)
+
+        # filter out sites named in filter_sites setting
+        comparison_set = comparison_set - set(self.filter_sites)
+
         pngs_out = []
         for pymol_position in comparison_set:
             conversion_index = int(pymol_position.replace("_","")) - 1
@@ -168,7 +177,7 @@ class SequenceComparison:
     def identify_PNGS_no_reference(self):
         all_comparisons = self.comparisons + [self.seq1]
         all_comparisons_pngs = [set(c.pngs) for c in all_comparisons]
-        return compare_seq_no_reference(all_comparisons_pngs, self.convert_numbering)
+        return compare_seq_no_reference(all_comparisons_pngs, self.convert_numbering, set(self.filter_sites))
 
 # Encoder for SequenceComparison serialization
 class SequenceComparisonEncoder(JSONEncoder):
@@ -182,10 +191,13 @@ class SequenceComparisonEncoder(JSONEncoder):
                 return sc
             return o.__dict__
 
-def compare_seq_no_reference(comparisons, convert):
+def compare_seq_no_reference(comparisons, convert, filtered=set()):
     comparison_set = set()
     for comp in comparisons:
         comparison_set = comparison_set | comp
+
+    # filter out sites named in filter_sites setting
+    comparison_set = comparison_set - filtered
 
     pngs_out = []
     num_comparisons = len(comparison_set)
@@ -301,6 +313,7 @@ def make_comparison_object(parameters):
     seq_lineage = parameters["seq_lineage"]
     numbering_scheme = parameters["numbering_scheme"]
     reference_mode = parameters["reference_mode"]
+    filter_sites = parameters["filter_sites"]
 
     s1 = FluSeq(
         lineage = seq_lineage,
@@ -320,7 +333,8 @@ def make_comparison_object(parameters):
     comparison = SequenceComparison(seq1 = s1,
         comparisons = comparisons,
         numbering_scheme = numbering_scheme,
-        reference_mode = reference_mode
+        reference_mode = reference_mode,
+        filter_sites = filter_sites
         )
 
     return comparison
