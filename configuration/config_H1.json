@@ -1,0 +1,11 @@
+{
+        "seq_file": "sample_input/H1_HA_testdataset.fasta",
+        "reference_id": "A/Sri_Lanka/20/2013",
+        "comparison_ids": ["A/Victoria/16/2013", "A/Brazil/201400566/2014", "A/Singapore/GP1922/2015", "A/Hanoi/ELI13150/2013"],
+        "seq_lineage": "H1",
+        "numbering_scheme": "H1",
+        "output_dir": "figures",
+        "reference_mode": true,
+		        "export_files": ["PSE"],
+        "filter_sites": [92, 94, 104]
+}
