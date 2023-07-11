@@ -63,6 +63,13 @@ The `configuration/config.json` file serves as input for the `make_comparison_fi
 * `q2_id`: Same as above but for the second query strain.
 * `seq_lineage`: Specify the lineage of your query strains. Either H1 or H3 for now.
 * `numbering_scheme`: What numbering scheme do you want to use for mutation identification? For H1 sequences, you can choose `H1pdm`, `H3`, or `H1_1933`. For H3 sequences, only `H3` numbering is available.
+* ``: What numbering scheme do you want to use for mutation identification? For H1 sequences, you can choose `H1pdm`, `H3`, or `H1_1933`. For H3 sequences, only `H3` numbering is available.
+* `reference_mode`: Use the reference strain for comparison (`true` or `false`),
+* `export_files`: Export .pse file, .png file, or both. Example: `["PSE"]`,
+* `filter_sites`: Filter out mutations and PNGS at the listed sites. Example: `[92, 94, 104]`,
+* `reverse_filter_sites`: Only include the listed sites, and exclude others. Note: reverse filter will override filter if both are non-empty. Example: `[92]`
+
+
 
 Similarly, the `configuration/movie_config.json` file serves as input for the `make_movie.py` script.
 * `output_handle`: The output base filename for the final movie.
