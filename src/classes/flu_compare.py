@@ -105,7 +105,7 @@ class FluSeq:
         return f"Name: {self.name}, Lineage: {self.lineage}, Query Sequence File: {self.query_sequence_file}, PNGS: {self.pngs}"
 
 class SequenceComparison:
-    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode, filter_sites):
+    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode, filter_sites, reverse_filter_sites):
         assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
         assert (type(comparisons) == list), "comparisons must be a list"
         assert len({s.lineage for s in comparisons} | {seq1.lineage }), "Cannot compare sequences from different lineages"
@@ -118,6 +118,12 @@ class SequenceComparison:
         self.conversion_table = pd.read_csv(conversion_file,
             index_col = "ref_one_index")
         self.filter_sites = [str(f) for f in filter_sites]
+        self.reverse_filter_sites = [str(f) for f in reverse_filter_sites]
+
+        # Reverse filter takes precedence over filter.
+        if len(self.reverse_filter_sites) > 0 and len(self.filter_sites) > 0:
+            self.filter_sites = []
+
         self.mutation_list = self.identify_mutations()
         self.reference_mode = reference_mode
         if self.reference_mode:
@@ -137,11 +143,15 @@ class SequenceComparison:
         comparisons = [x.sequence.seq for x in self.comparisons]
         sequences.extend(comparisons)
 
+        filter_on = len(self.filter_sites) != 0
+        rev_filter_on = len(self.reverse_filter_sites) != 0
+
         mutations_out = []
         for i, sites in enumerate(zip(*sequences)):
             if not len(set(sites)) == 1:
                 p = self.convert_numbering(i)
-                if not p in self.filter_sites:
+
+                if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not_rev_filter_on):
                     mutations_out.append(
                         FluMutationMultiWay(pymol_resi = str(i+1),
                             label = "".join(list(sites) + [str(p)])
@@ -166,6 +176,10 @@ class SequenceComparison:
         # filter out sites named in filter_sites setting
         comparison_set = comparison_set - set(self.filter_sites)
 
+        if len(self.reverse_filter_sites):
+            comparison_set = set(self.reverse_filter_sites) - comparison_set
+
+
         pngs_out = []
         for pymol_position in comparison_set:
             conversion_index = int(pymol_position.replace("_","")) - 1
@@ -177,7 +191,7 @@ class SequenceComparison:
     def identify_PNGS_no_reference(self):
         all_comparisons = self.comparisons + [self.seq1]
         all_comparisons_pngs = [set(c.pngs) for c in all_comparisons]
-        return compare_seq_no_reference(all_comparisons_pngs, self.convert_numbering, set(self.filter_sites))
+        return compare_seq_no_reference(all_comparisons_pngs, self.convert_numbering, set(self.filter_sites), set(self.reverse_filter_sites))
 
 # Encoder for SequenceComparison serialization
 class SequenceComparisonEncoder(JSONEncoder):
@@ -191,13 +205,17 @@ class SequenceComparisonEncoder(JSONEncoder):
                 return sc
             return o.__dict__
 
-def compare_seq_no_reference(comparisons, convert, filtered=set()):
+def compare_seq_no_reference(comparisons, convert, filtered=set(), rev_filtered=set()):
     comparison_set = set()
     for comp in comparisons:
         comparison_set = comparison_set | comp
 
     # filter out sites named in filter_sites setting
     comparison_set = comparison_set - filtered
+
+    if len(rev_filtered) > 0:
+        comparison_set = rev_filtered - comparison_set
+
 
     pngs_out = []
     num_comparisons = len(comparison_set)
@@ -286,9 +304,12 @@ def color_pngs_no_reference(glylist, name, color):
             cmd.show("sticks", name)
 
         for g in glylist:
-            cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
-            cmd.set_color("color_" + g.pymol_resi, [1 - g.percent_conserved, 0.0, 0.0])
-            cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
+            try:
+                cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
+                cmd.set_color("color_" + g.pymol_resi, [1 - g.percent_conserved, 0.0, 0.0])
+                cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
+            except Exception as e:
+                print(e)
 
 def create_label(x, y, z, label_text, label_name, label_color, label_size=-4):
     cmd.pseudoatom(label_name)
@@ -313,7 +334,8 @@ def make_comparison_object(parameters):
     seq_lineage = parameters["seq_lineage"]
     numbering_scheme = parameters["numbering_scheme"]
     reference_mode = parameters["reference_mode"]
-    filter_sites = parameters["filter_sites"]
+    filter_sites = parameters.get("filter_sites", [])
+    reverse_filter_sites = parameters.get("reverse_filter_sites", [])
 
     s1 = FluSeq(
         lineage = seq_lineage,
@@ -334,7 +356,8 @@ def make_comparison_object(parameters):
         comparisons = comparisons,
         numbering_scheme = numbering_scheme,
         reference_mode = reference_mode,
-        filter_sites = filter_sites
+        filter_sites = filter_sites,
+        reverse_filter_sites = reverse_filter_sites
         )
 
     return comparison
