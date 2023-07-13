@@ -7,6 +7,7 @@ from pymol import cmd
 import numpy
 import json
 from json import JSONEncoder
+from colour import Color
 
 
 # Internal data directory
@@ -250,14 +251,17 @@ def make_figure(sc):
     cmd.set('label_color', 'black')
     cmd.load(f"{DATA_DIR}/{sc.lineage}_pngs.pse")
 
- 
+
+    # Number of strains compared including reference
+    num_comp = len(sc.comparisons) + 1
+
     # Color glycosylations
     if sc.reference_mode:
         color_pngs(sc.gly_del, "glycan_deletions", "red")
         color_pngs(sc.gly_add, "glycan_additions", "green")
         color_pngs(sc.gly_share, "glycans_shared", "blue")
     else:
-        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", "red")
+        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", "red", num_comp)
 
     # Name file with the first 3 strains.
     base_filename = "-".join([n.replace("/", "_") for n in names[:3]])
@@ -268,6 +272,8 @@ def make_figure(sc):
     # Add labels
     label_resi_full(sc.mutation_list)
 
+    spectrum = list(Color('red').range_to(Color('yellow'), num_comp))
+
     # Color mutations
     if sc.reference_mode:
         if len(mutations) > 0:
@@ -275,13 +281,9 @@ def make_figure(sc):
             cmd.color('yellow', 'mutations')
     else:
         for m in mutations:
-            try:
-                cmd.set_color("color_" + m.pymol_resi, [1 - (m.percent_conserved), 1 - (m.percent_conserved), 0.0])
-                cmd.color("color_" + m.pymol_resi, m.label)
-            except Exception as e:
-                print(e)
-
-
+            color = list(spectrum[int(m.percent_conserved*num_comp)].get_rgb())
+            cmd.set_color("color_" + m.pymol_resi, color)
+            cmd.color("color_" + m.pymol_resi, m.label)
 
     if sc.reference_mode:
         label_resi(sc.gly_del)
@@ -314,7 +316,7 @@ def color_pngs(glylist, name, color):
             cmd.show("sticks", name)
             cmd.color(color, name)
 
-def color_pngs_no_reference(glylist, name, color):
+def color_pngs_no_reference(glylist, name, color, gradations):
     if len(glylist) > 0:
         PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
         PNGS_names_final = set(PNGS_names).intersection(set(cmd.get_names(type="selections")))
@@ -323,10 +325,14 @@ def color_pngs_no_reference(glylist, name, color):
             cmd.select(name, ' | '.join(PNGS_names_final))
             cmd.show("sticks", name)
 
+        spectrum = list(Color('white').range_to(Color('blue'), gradations))
+
         for g in glylist:
             try:
                 cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
-                cmd.set_color("color_" + g.pymol_resi, [1 - (g.percent_conserved/2), 0.0, 0.0])
+
+                color = list(spectrum[int(g.percent_conserved*(gradations-1))].get_rgb())
+                cmd.set_color("color_" + g.pymol_resi, color)
                 cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
             except Exception as e:
                 print(e)

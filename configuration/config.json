@@ -6,6 +6,5 @@
         "numbering_scheme": "H3",
         "output_dir": "figures",
         "reference_mode": false,
-        "export_files": ["PSE"],
-        "reverse_filter_sites": [174, 160, 138]
+        "export_files": ["PSE"]
 }
