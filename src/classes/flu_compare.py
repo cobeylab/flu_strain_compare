@@ -151,7 +151,7 @@ class SequenceComparison:
             if not len(set(sites)) == 1:
                 p = self.convert_numbering(i)
 
-                if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not_rev_filter_on):
+                if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not rev_filter_on):
                     mutations_out.append(
                         FluMutationMultiWay(pymol_resi = str(i+1),
                             label = "".join(list(sites) + [str(p)])
@@ -214,11 +214,12 @@ def compare_seq_no_reference(comparisons, convert, filtered=set(), rev_filtered=
     comparison_set = comparison_set - filtered
 
     if len(rev_filtered) > 0:
-        comparison_set = rev_filtered - comparison_set
+        comparison_set = rev_filtered.intersection(comparison_set)
 
 
     pngs_out = []
-    num_comparisons = len(comparison_set)
+    num_comparisons = len(comparisons)
+
     for pymol_position in comparison_set:
         conversion_index = int(pymol_position.replace("_","")) - 1
         label = "PNGS%s"%convert(conversion_index)
@@ -306,7 +307,7 @@ def color_pngs_no_reference(glylist, name, color):
         for g in glylist:
             try:
                 cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
-                cmd.set_color("color_" + g.pymol_resi, [1 - g.percent_conserved, 0.0, 0.0])
+                cmd.set_color("color_" + g.pymol_resi, [1 - (g.percent_conserved/2), 0.0, 0.0])
                 cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
             except Exception as e:
                 print(e)
