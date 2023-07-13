@@ -32,13 +32,16 @@ class FluMutation:
 class FluMutationMultiWay:
     def __init__(self,
         pymol_resi,
-        label):
+        label,
+        percent_conserved
+        ):
         assert (type(pymol_resi) == str), "Position must be a string"
         assert (type(label) == str), "Mutation must be identified as a string"
         self.pymol_resi = pymol_resi
         self.label = label
+        self.percent_conserved = percent_conserved
     def __str__(self):
-        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}"
+        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}, Percent conserved: {self.percent_conserved}"
 
 class FluPngs:
     def __init__(self,
@@ -152,9 +155,12 @@ class SequenceComparison:
                 p = self.convert_numbering(i)
 
                 if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not rev_filter_on):
+
+                    percent_conserved = sites.count(sites[0])/len(sites)
                     mutations_out.append(
                         FluMutationMultiWay(pymol_resi = str(i+1),
-                            label = "".join(list(sites) + [str(p)])
+                            label = "".join(list(sites) + [str(p)]),
+                            percent_conserved = percent_conserved
                             )
                     )
         return mutations_out
@@ -233,7 +239,8 @@ def compare_seq_no_reference(comparisons, convert, filtered=set(), rev_filtered=
 # Render a SequenceComparison
 def make_figure(sc):
     names = [sc.seq1.name] + [s.name for s in sc.comparisons]
-    mutations = [m.pymol_resi for m in sc.mutation_list if m.pymol_resi != "-"]
+    mutations = [m for m in sc.mutation_list if m.pymol_resi != "-"]
+
     cmd.reinitialize()
     cmd.set('ray_trace_mode', 0)
 
@@ -243,11 +250,7 @@ def make_figure(sc):
     cmd.set('label_color', 'black')
     cmd.load(f"{DATA_DIR}/{sc.lineage}_pngs.pse")
 
-    # Color mutations
-    if len(mutations) > 0:
-        cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
-        cmd.color('yellow', 'mutations')
-
+ 
     # Color glycosylations
     if sc.reference_mode:
         color_pngs(sc.gly_del, "glycan_deletions", "red")
@@ -263,7 +266,23 @@ def make_figure(sc):
         base_filename += f"-{names_len - 4}_others"
 
     # Add labels
-    label_resi(sc.mutation_list)
+    label_resi_full(sc.mutation_list)
+
+    # Color mutations
+    if sc.reference_mode:
+        if len(mutations) > 0:
+            cmd.select('mutations', '(resi %s)'%'+'.join([m.pymol_resi for m in mutations]))
+            cmd.color('yellow', 'mutations')
+    else:
+        for m in mutations:
+            try:
+                cmd.set_color("color_" + m.pymol_resi, [1 - (m.percent_conserved), 1 - (m.percent_conserved), 0.0])
+                cmd.color("color_" + m.pymol_resi, m.label)
+            except Exception as e:
+                print(e)
+
+
+
     if sc.reference_mode:
         label_resi(sc.gly_del)
         label_resi(sc.gly_add)
@@ -327,6 +346,13 @@ def label_resi(resilist):
         if resi != "-":
             cmd.select(label, 'n. CA and i. ' + resi)
             cmd.label(selection = label, expression = f"'{label}'")
+
+def label_resi_full(resilist):
+    for m in resilist:
+        label = m.label
+        resi = m.pymol_resi
+        if resi != "-":
+            cmd.select(label, f'(resi {resi})')
 
 def make_comparison_object(parameters):
     seq_file = parameters["seq_file"]
