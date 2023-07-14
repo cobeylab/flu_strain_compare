@@ -7,6 +7,7 @@ from pymol import cmd
 import numpy
 import json
 from json import JSONEncoder
+from colour import Color
 
 
 # Internal data directory
@@ -32,13 +33,16 @@ class FluMutation:
 class FluMutationMultiWay:
     def __init__(self,
         pymol_resi,
-        label):
+        label,
+        percent_conserved
+        ):
         assert (type(pymol_resi) == str), "Position must be a string"
         assert (type(label) == str), "Mutation must be identified as a string"
         self.pymol_resi = pymol_resi
         self.label = label
+        self.percent_conserved = percent_conserved
     def __str__(self):
-        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}"
+        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}, Percent conserved: {self.percent_conserved}"
 
 class FluPngs:
     def __init__(self,
@@ -151,10 +155,13 @@ class SequenceComparison:
             if not len(set(sites)) == 1:
                 p = self.convert_numbering(i)
 
-                if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not_rev_filter_on):
+                if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not rev_filter_on):
+
+                    percent_conserved = sites.count(sites[0])/len(sites)
                     mutations_out.append(
                         FluMutationMultiWay(pymol_resi = str(i+1),
-                            label = "".join(list(sites) + [str(p)])
+                            label = "".join(list(sites) + [str(p)]),
+                            percent_conserved = percent_conserved
                             )
                     )
         return mutations_out
@@ -214,11 +221,12 @@ def compare_seq_no_reference(comparisons, convert, filtered=set(), rev_filtered=
     comparison_set = comparison_set - filtered
 
     if len(rev_filtered) > 0:
-        comparison_set = rev_filtered - comparison_set
+        comparison_set = rev_filtered.intersection(comparison_set)
 
 
     pngs_out = []
-    num_comparisons = len(comparison_set)
+    num_comparisons = len(comparisons)
+
     for pymol_position in comparison_set:
         conversion_index = int(pymol_position.replace("_","")) - 1
         label = "PNGS%s"%convert(conversion_index)
@@ -232,7 +240,8 @@ def compare_seq_no_reference(comparisons, convert, filtered=set(), rev_filtered=
 # Render a SequenceComparison
 def make_figure(sc):
     names = [sc.seq1.name] + [s.name for s in sc.comparisons]
-    mutations = [m.pymol_resi for m in sc.mutation_list if m.pymol_resi != "-"]
+    mutations = [m for m in sc.mutation_list if m.pymol_resi != "-"]
+
     cmd.reinitialize()
     cmd.set('ray_trace_mode', 0)
 
@@ -242,10 +251,9 @@ def make_figure(sc):
     cmd.set('label_color', 'black')
     cmd.load(f"{DATA_DIR}/{sc.lineage}_pngs.pse")
 
-    # Color mutations
-    if len(mutations) > 0:
-        cmd.select('mutations', '(resi %s)'%'+'.join([i for i in mutations]))
-        cmd.color('yellow', 'mutations')
+
+    # Number of strains compared including reference
+    num_comp = len(sc.comparisons) + 1
 
     # Color glycosylations
     if sc.reference_mode:
@@ -253,7 +261,7 @@ def make_figure(sc):
         color_pngs(sc.gly_add, "glycan_additions", "green")
         color_pngs(sc.gly_share, "glycans_shared", "blue")
     else:
-        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", "red")
+        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", "red", num_comp)
 
     # Name file with the first 3 strains.
     base_filename = "-".join([n.replace("/", "_") for n in names[:3]])
@@ -262,7 +270,21 @@ def make_figure(sc):
         base_filename += f"-{names_len - 4}_others"
 
     # Add labels
-    label_resi(sc.mutation_list)
+    label_resi_full(sc.mutation_list)
+
+    spectrum = list(Color('red').range_to(Color('yellow'), num_comp))
+
+    # Color mutations
+    if sc.reference_mode:
+        if len(mutations) > 0:
+            cmd.select('mutations', '(resi %s)'%'+'.join([m.pymol_resi for m in mutations]))
+            cmd.color('yellow', 'mutations')
+    else:
+        for m in mutations:
+            color = list(spectrum[int(m.percent_conserved*num_comp)].get_rgb())
+            cmd.set_color("color_" + m.pymol_resi, color)
+            cmd.color("color_" + m.pymol_resi, m.label)
+
     if sc.reference_mode:
         label_resi(sc.gly_del)
         label_resi(sc.gly_add)
@@ -294,7 +316,7 @@ def color_pngs(glylist, name, color):
             cmd.show("sticks", name)
             cmd.color(color, name)
 
-def color_pngs_no_reference(glylist, name, color):
+def color_pngs_no_reference(glylist, name, color, gradations):
     if len(glylist) > 0:
         PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
         PNGS_names_final = set(PNGS_names).intersection(set(cmd.get_names(type="selections")))
@@ -303,10 +325,14 @@ def color_pngs_no_reference(glylist, name, color):
             cmd.select(name, ' | '.join(PNGS_names_final))
             cmd.show("sticks", name)
 
+        spectrum = list(Color('white').range_to(Color('blue'), gradations))
+
         for g in glylist:
             try:
                 cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
-                cmd.set_color("color_" + g.pymol_resi, [1 - g.percent_conserved, 0.0, 0.0])
+
+                color = list(spectrum[int(g.percent_conserved*(gradations-1))].get_rgb())
+                cmd.set_color("color_" + g.pymol_resi, color)
                 cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
             except Exception as e:
                 print(e)
@@ -326,6 +352,13 @@ def label_resi(resilist):
         if resi != "-":
             cmd.select(label, 'n. CA and i. ' + resi)
             cmd.label(selection = label, expression = f"'{label}'")
+
+def label_resi_full(resilist):
+    for m in resilist:
+        label = m.label
+        resi = m.pymol_resi
+        if resi != "-":
+            cmd.select(label, f'(resi {resi})')
 
 def make_comparison_object(parameters):
     seq_file = parameters["seq_file"]
