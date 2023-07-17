@@ -255,24 +255,12 @@ def make_figure(sc):
     # Number of strains compared including reference
     num_comp = len(sc.comparisons) + 1
 
-    # Color glycosylations
-    if sc.reference_mode:
-        color_pngs(sc.gly_del, "glycan_deletions", "red")
-        color_pngs(sc.gly_add, "glycan_additions", "green")
-        color_pngs(sc.gly_share, "glycans_shared", "blue")
-    else:
-        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", "red", num_comp)
-
-    # Name file with the first 3 strains.
-    base_filename = "-".join([n.replace("/", "_") for n in names[:3]])
-    names_len = len(names)
-    if names_len > 3:
-        base_filename += f"-{names_len - 4}_others"
 
     # Add labels
     label_resi_full(sc.mutation_list)
 
     spectrum = list(Color('red').range_to(Color('yellow'), num_comp))
+    gly_spectrum = list(Color('white').range_to(Color('blue'), num_comp))
 
     # Color mutations
     if sc.reference_mode:
@@ -284,6 +272,21 @@ def make_figure(sc):
             color = list(spectrum[int(m.percent_conserved*num_comp)].get_rgb())
             cmd.set_color("color_" + m.pymol_resi, color)
             cmd.color("color_" + m.pymol_resi, m.label)
+
+
+    # Color glycosylations
+    if sc.reference_mode:
+        color_pngs(sc.gly_del, "glycan_deletions", "red")
+        color_pngs(sc.gly_add, "glycan_additions", "green")
+        color_pngs(sc.gly_share, "glycans_shared", "blue")
+    else:
+        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", gly_spectrum)
+
+    # Name file with the first 3 strains.
+    base_filename = "-".join([n.replace("/", "_") for n in names[:3]])
+    names_len = len(names)
+    if names_len > 3:
+        base_filename += f"-{names_len - 4}_others"
 
     if sc.reference_mode:
         label_resi(sc.gly_del)
@@ -301,6 +304,13 @@ def make_figure(sc):
     else:
         label_resi(sc.gly_no_reference)
 
+        x_pos = -60
+        z_pos = 0
+        y_start = 0
+        y_offset = -5
+        draw_legend(x_pos, y_start, z_pos, y_offset, gly_spectrum, "gly", "PNGS")
+        draw_legend(x_pos + 25, y_start, z_pos, y_offset, spectrum, "mut", "Mutation")
+
     cmd.hide("everything", "extra_glycans")
 
     create_label(0, 110, 0, " vs. ".join(names), "strains", "white", label_size=-5)
@@ -316,7 +326,18 @@ def color_pngs(glylist, name, color):
             cmd.show("sticks", name)
             cmd.color(color, name)
 
-def color_pngs_no_reference(glylist, name, color, gradations):
+def draw_legend(x, y, z, offset, spectrum, prefix, header):
+        create_label(x, y, z, header, f"{prefix}_spectrum_label_header", "white")
+        box = '\u2588'
+
+        for i, c in enumerate(spectrum):
+            if i > 0:
+                cmd.set_color(f"{prefix}_color_{i}", list(c.get_rgb()))
+                perc_cons = round(100 * i/len(spectrum))
+                create_label(x, y + i * offset, z, f"{box} {perc_cons}%", f"{prefix}_spectrum_label_{i}", f"{prefix}_color_{i}")
+
+
+def color_pngs_no_reference(glylist, name, spectrum):
     if len(glylist) > 0:
         PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
         PNGS_names_final = set(PNGS_names).intersection(set(cmd.get_names(type="selections")))
@@ -324,14 +345,12 @@ def color_pngs_no_reference(glylist, name, color, gradations):
         if len(PNGS_names_final) > 0:
             cmd.select(name, ' | '.join(PNGS_names_final))
             cmd.show("sticks", name)
-
-        spectrum = list(Color('white').range_to(Color('blue'), gradations))
-
+ 
         for g in glylist:
             try:
                 cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
 
-                color = list(spectrum[int(g.percent_conserved*(gradations-1))].get_rgb())
+                color = list(spectrum[int(g.percent_conserved*(len(spectrum)-1))].get_rgb())
                 cmd.set_color("color_" + g.pymol_resi, color)
                 cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
             except Exception as e:
@@ -352,6 +371,7 @@ def label_resi(resilist):
         if resi != "-":
             cmd.select(label, 'n. CA and i. ' + resi)
             cmd.label(selection = label, expression = f"'{label}'")
+            cmd.hide("labels", label)
 
 def label_resi_full(resilist):
     for m in resilist:
