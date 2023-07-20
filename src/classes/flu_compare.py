@@ -27,8 +27,12 @@ class FluMutationMultiWay:
         self.label = label
         self.percent_conserved = percent_conserved
         self.conservative = conservative
+    def as_row(self):
+        return f"{self.pymol_resi}\t{self.label}\t{self.percent_conserved}\t{self.conservative}"
     def __str__(self):
         return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}, Percent conserved: {self.percent_conserved}, Conservative: {self.conservative}"
+
+
 
 class FluPngs:
     def __init__(self,
