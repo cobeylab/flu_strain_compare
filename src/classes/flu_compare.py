@@ -246,7 +246,7 @@ def make_figure(sc):
     label_resi_full(sc.mutation_list)
 
     spectrum = list(Color('red').range_to(Color('yellow'), num_comp))
-    gly_spectrum = list(Color('white').range_to(Color('blue'), num_comp))
+    gly_spectrum = list(Color('purple').range_to(Color('blue'), num_comp))
 
     # Color mutations
     if sc.reference_mode:
@@ -299,7 +299,10 @@ def make_figure(sc):
 
     cmd.hide("everything", "extra_glycans")
 
-    create_label(0, 110, 0, " vs. ".join(names), "strains", "white", label_size=-5)
+    create_label(0, 110, 0, " vs. ".join(names), "strains", "black", label_size=-5)
+
+    cmd.bg_color(color="white")
+
     return base_filename
 
 def color_pngs(glylist, name, color):
@@ -313,14 +316,14 @@ def color_pngs(glylist, name, color):
             cmd.color(color, name)
 
 def draw_legend(x, y, z, offset, spectrum, prefix, header):
-        create_label(x, y, z, header, f"{prefix}_spectrum_label_header", "white")
+        create_label(x, y, z, header, f"{prefix}_spectrum_label_header", "black")
         box = '\u2588'
 
         for i, c in enumerate(spectrum):
             if i > 0:
                 cmd.set_color(f"{prefix}_color_{i}", list(c.get_rgb()))
                 perc_cons = round(100 * i/len(spectrum))
-                create_label(x, y + i * offset, z, f"{box} {perc_cons}%", f"{prefix}_spectrum_label_{i}", f"{prefix}_color_{i}")
+                create_label(x, y + i * offset, z, f"{perc_cons}% {box}", f"{prefix}_spectrum_label_{i}", f"{prefix}_color_{i}")
 
 
 def color_pngs_no_reference(glylist, name, spectrum):
