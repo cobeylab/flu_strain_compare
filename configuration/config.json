@@ -5,6 +5,7 @@
         "seq_lineage": "H3",
         "numbering_scheme": "H3",
         "output_dir": "figures",
+        "output_csv": true,
         "reference_mode": false,
         "export_files": ["PSE"]
 }
