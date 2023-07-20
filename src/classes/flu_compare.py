@@ -8,41 +8,27 @@ import numpy
 import json
 from json import JSONEncoder
 from colour import Color
+from util import conservative
 
 
 # Internal data directory
 DATA_DIR = "data"
 
-class FluMutation:
-    def __init__(self,
-        pymol_resi,
-        label,
-        strain1,
-        strain2):
-        assert (type(pymol_resi) == str), "Position must be a string"
-        assert (type(label) == str), "Mutation must be identified as a string"
-        assert (type(strain1) == str), "Strain 1 must be a string identifier"
-        assert (type(strain2) == str), "Strain 2 must be a string identifier"
-        self.pymol_resi = pymol_resi
-        self.label = label
-        self.strain1 = strain1
-        self.strain2 = strain2
-    def __str__(self):
-        return f"Strain 1: {self.strain1}, Strain 2: {self.strain2}, Mutation: {self.label}"
-
 class FluMutationMultiWay:
     def __init__(self,
         pymol_resi,
         label,
-        percent_conserved
+        percent_conserved,
+        conservative
         ):
         assert (type(pymol_resi) == str), "Position must be a string"
         assert (type(label) == str), "Mutation must be identified as a string"
         self.pymol_resi = pymol_resi
         self.label = label
         self.percent_conserved = percent_conserved
+        self.conservative = conservative
     def __str__(self):
-        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}, Percent conserved: {self.percent_conserved}"
+        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}, Percent conserved: {self.percent_conserved}, Conservative: {self.conservative}"
 
 class FluPngs:
     def __init__(self,
@@ -156,12 +142,12 @@ class SequenceComparison:
                 p = self.convert_numbering(i)
 
                 if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not rev_filter_on):
-
                     percent_conserved = sites.count(sites[0])/len(sites)
                     mutations_out.append(
                         FluMutationMultiWay(pymol_resi = str(i+1),
                             label = "".join(list(sites) + [str(p)]),
-                            percent_conserved = percent_conserved
+                            percent_conserved = percent_conserved,
+                            conservative = conservative(sites[0], sites[1]) if len(sites) == 2 else None
                             )
                     )
         return mutations_out
