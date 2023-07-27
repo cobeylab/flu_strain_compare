@@ -9,7 +9,13 @@ figure_dir = parameters["output_dir"]
 
 comparison = make_comparison_object(parameters)
 
-print(json.dumps(comparison, indent=4, cls=SequenceComparisonEncoder))
+# Output json or csv
+if parameters.get("output_csv", False):
+    print("PyMOL residue\tMutation\tPercent conserved\tConservative")
+    [print(m.as_row()) for m in comparison.mutation_list]
+else:
+    print(json.dumps(comparison, indent=4, cls=SequenceComparisonEncoder))
+
 
 base_filename = make_figure(comparison)
 

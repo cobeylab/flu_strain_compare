@@ -6,6 +6,8 @@
 # print(conv1, conv3)
 
 from pymol import cmd
+from scipy.stats import entropy
+from math import log
 
 # Prepare constants
 AA1 = list("ACDEFGHIKLMNPQRSTVWY")
@@ -42,3 +44,11 @@ def conservative(prev, curr):
     prev_index = [(prev in s) for s in AA_GROUPS].index(True)
     curr_index = [(curr in s) for s in AA_GROUPS].index(True)
     return prev_index == curr_index
+
+
+
+# Shannon index normalized to the range 0.0-1.0.
+def shannon(events):
+    num_events = len(events)
+    probs = [events.count(e)/num_events for e in set(events)]
+    return entropy(probs)/log(num_events)
