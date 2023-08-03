@@ -8,5 +8,5 @@
         "output_csv": false,
         "reference_mode": false,
         "export_files": ["PSE"],
-        "diversity_index": "shannon"
+        "diversity_index": "gini-simpson"
 }

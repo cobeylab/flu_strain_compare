@@ -119,7 +119,7 @@ class SequenceComparison:
         if len(self.reverse_filter_sites) > 0 and len(self.filter_sites) > 0:
             self.filter_sites = []
 
-        self.mutation_list = self.identify_mutations()
+        self.mutation_list = self.identify_mutations(self.diversity_index)
         self.reference_mode = reference_mode
         if self.reference_mode:
             self.gly_del = self.identify_PNGS_changes("deletions")
@@ -260,7 +260,7 @@ def make_figure(sc):
             cmd.color('yellow', 'mutations')
     else:
         for m in mutations:
-            color = list(spectrum[int(m.diversity*num_comp)].get_rgb())
+            color = list(spectrum[int(m.diversity*len(spectrum)-1)].get_rgb())
             cmd.set_color("color_" + m.pymol_resi, color)
             cmd.color("color_" + m.pymol_resi, m.label)
 
@@ -300,7 +300,7 @@ def make_figure(sc):
         y_start = 0
         y_offset = -5
         draw_legend(x_pos, y_start, z_pos, y_offset, gly_spectrum, "gly", "PNGS")
-        draw_legend(x_pos + 25, y_start, z_pos, y_offset, spectrum, "mut", "Mutation")
+        draw_legend(x_pos + 25, y_start, z_pos, y_offset, spectrum, "mut", "Diversity")
 
     cmd.hide("everything", "extra_glycans")
 
@@ -415,6 +415,10 @@ def convert_diversity_string(diversity_index):
     d = diversity_index.lower().strip()
     if d == "shannon":
         return util.shannon
+    elif d == "richness":
+        return util.richness
+    elif d == "gini-simpson":
+        return util.gini_simpson
     else:
         return util.shannon
 

@@ -52,3 +52,16 @@ def shannon(events):
     num_events = len(events)
     probs = [events.count(e)/num_events for e in set(events)]
     return entropy(probs)/log(num_events)
+
+# Richness normalized to the range 0.0-1.0.
+def richness(events):
+    return len(set(events))/len(events)
+
+# Gini-Simpson Index
+def gini_simpson(events):
+    gsi = 1 - sum([pow(proportional_abundance(e, events), 2) for e in set(events)])
+    return gsi
+
+# Proportional abundance (probability of selecting an element).
+def proportional_abundance(element, events):
+    return events.count(element)/len(events)
