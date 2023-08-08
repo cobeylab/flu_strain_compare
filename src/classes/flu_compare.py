@@ -99,7 +99,7 @@ class FluSeq:
         return f"Name: {self.name}, Lineage: {self.lineage}, Query Sequence File: {self.query_sequence_file}, PNGS: {self.pngs}"
 
 class SequenceComparison:
-    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode, filter_sites, reverse_filter_sites, diversity_index):
+    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode, filter_sites, reverse_filter_sites, diversity_index, non_conservative_only):
         assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
         assert (type(comparisons) == list), "comparisons must be a list"
         assert len({s.lineage for s in comparisons} | {seq1.lineage }), "Cannot compare sequences from different lineages"
@@ -114,12 +114,13 @@ class SequenceComparison:
         self.filter_sites = [str(f) for f in filter_sites]
         self.reverse_filter_sites = [str(f) for f in reverse_filter_sites]
         self.diversity_index = convert_diversity_string(diversity_index)
+        self.non_conservative_only = non_conservative_only
 
         # Reverse filter takes precedence over filter.
         if len(self.reverse_filter_sites) > 0 and len(self.filter_sites) > 0:
             self.filter_sites = []
 
-        self.mutation_list = self.identify_mutations(self.diversity_index)
+        self.mutation_list = self.identify_mutations(self.non_conservative_only, self.diversity_index)
         self.reference_mode = reference_mode
         if self.reference_mode:
             self.gly_del = self.identify_PNGS_changes("deletions")
@@ -132,7 +133,7 @@ class SequenceComparison:
         position):
         return self.conversion_table.loc[position + 1, self.numbering_scheme]
 
-    def identify_mutations(self, diversity_index=util.shannon):
+    def identify_mutations(self, non_conservative_only, diversity_index=util.shannon):
         # Put sequences in one list
         sequences = [self.seq1.sequence.seq]
         comparisons = [x.sequence.seq for x in self.comparisons]
@@ -147,7 +148,11 @@ class SequenceComparison:
                 p = self.convert_numbering(i)
 
                 if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not rev_filter_on):
-                    diversity = diversity_index(sites)
+                    if non_conservative_only:
+                        diversity = diversity_index(util.to_conservative(sites))
+                    else:
+                        diversity = diversity_index(sites)
+
                     mutations_out.append(
                         FluMutationMultiWay(pymol_resi = str(i+1),
                             label = "".join(list(sites) + [str(p)]),
@@ -260,7 +265,7 @@ def make_figure(sc):
             cmd.color('yellow', 'mutations')
     else:
         for m in mutations:
-            color = list(spectrum[int(m.diversity*len(spectrum)-1)].get_rgb())
+            color = list(spectrum[int(m.diversity*(len(spectrum)-1))].get_rgb())
             cmd.set_color("color_" + m.pymol_resi, color)
             cmd.color("color_" + m.pymol_resi, m.label)
 
@@ -383,6 +388,7 @@ def make_comparison_object(parameters):
     filter_sites = parameters.get("filter_sites", [])
     reverse_filter_sites = parameters.get("reverse_filter_sites", [])
     diversity_index = parameters.get("diversity_index", "shannon")
+    non_conservative_only = parameters.get("non-conservative_only", False)
 
     s1 = FluSeq(
         lineage = seq_lineage,
@@ -405,7 +411,8 @@ def make_comparison_object(parameters):
         reference_mode = reference_mode,
         filter_sites = filter_sites,
         reverse_filter_sites = reverse_filter_sites,
-        diversity_index = diversity_index
+        diversity_index = diversity_index,
+        non_conservative_only = non_conservative_only
         )
 
     return comparison
