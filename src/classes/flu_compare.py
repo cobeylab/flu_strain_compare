@@ -8,7 +8,7 @@ import numpy
 import json
 from json import JSONEncoder
 from colour import Color
-from util import conservative
+import util
 
 
 # Internal data directory
@@ -18,19 +18,19 @@ class FluMutationMultiWay:
     def __init__(self,
         pymol_resi,
         label,
-        percent_conserved,
+        diversity,
         conservative
         ):
         assert (type(pymol_resi) == str), "Position must be a string"
         assert (type(label) == str), "Mutation must be identified as a string"
         self.pymol_resi = pymol_resi
         self.label = label
-        self.percent_conserved = percent_conserved
+        self.diversity = diversity
         self.conservative = conservative
     def as_row(self):
-        return f"{self.pymol_resi}\t{self.label}\t{self.percent_conserved}\t{self.conservative}"
+        return f"{self.pymol_resi}\t{self.label}\t{self.diversity}\t{self.conservative}"
     def __str__(self):
-        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}, Percent conserved: {self.percent_conserved}, Conservative: {self.conservative}"
+        return f"PyMOL residue: {self.pymol_resi}, Mutation: {self.label}, Diversity: {self.diversity}, Conservative: {self.conservative}"
 
 
 
@@ -38,19 +38,19 @@ class FluPngs:
     def __init__(self,
         pymol_resi,
         label,
-        percent_conserved):
+        diversity):
         assert (type(pymol_resi) == str), "Position must be a string"
         assert (type(label) == str), "Label must be identified as a string"
         self.pymol_resi = pymol_resi
         self.label = label
-        self.percent_conserved = percent_conserved
+        self.diversity = diversity
 
     def __str__(self):
-        return f"PNGS: {self.pymol_resi}, Label: {self.label}, Conserved: {self.percent_conserved}"
+        return f"PNGS: {self.pymol_resi}, Label: {self.label}, Conserved: {self.diversity}"
 
     def __eq__(self, other):
         if isinstance(self, other.__class__):
-            return self.pymol_resi == other.pymol_resi and self.label == other.label and self.percent_conserved == other.percent_conserved
+            return self.pymol_resi == other.pymol_resi and self.label == other.label and self.diversity == other.diversity
         return False
 
 
@@ -99,7 +99,7 @@ class FluSeq:
         return f"Name: {self.name}, Lineage: {self.lineage}, Query Sequence File: {self.query_sequence_file}, PNGS: {self.pngs}"
 
 class SequenceComparison:
-    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode, filter_sites, reverse_filter_sites):
+    def __init__(self, seq1, comparisons, numbering_scheme, reference_mode, filter_sites, reverse_filter_sites, diversity_index, non_conservative_only):
         assert (type(seq1) == FluSeq), "Seq1 must be a FluSeq object"
         assert (type(comparisons) == list), "comparisons must be a list"
         assert len({s.lineage for s in comparisons} | {seq1.lineage }), "Cannot compare sequences from different lineages"
@@ -113,12 +113,14 @@ class SequenceComparison:
             index_col = "ref_one_index")
         self.filter_sites = [str(f) for f in filter_sites]
         self.reverse_filter_sites = [str(f) for f in reverse_filter_sites]
+        self.diversity_index = convert_diversity_string(diversity_index)
+        self.non_conservative_only = non_conservative_only
 
         # Reverse filter takes precedence over filter.
         if len(self.reverse_filter_sites) > 0 and len(self.filter_sites) > 0:
             self.filter_sites = []
 
-        self.mutation_list = self.identify_mutations()
+        self.mutation_list = self.identify_mutations(self.non_conservative_only, self.diversity_index)
         self.reference_mode = reference_mode
         if self.reference_mode:
             self.gly_del = self.identify_PNGS_changes("deletions")
@@ -131,7 +133,7 @@ class SequenceComparison:
         position):
         return self.conversion_table.loc[position + 1, self.numbering_scheme]
 
-    def identify_mutations(self):
+    def identify_mutations(self, non_conservative_only, diversity_index=util.shannon):
         # Put sequences in one list
         sequences = [self.seq1.sequence.seq]
         comparisons = [x.sequence.seq for x in self.comparisons]
@@ -146,12 +148,16 @@ class SequenceComparison:
                 p = self.convert_numbering(i)
 
                 if (filter_on and not p in self.filter_sites) or (rev_filter_on and p in self.reverse_filter_sites) or (not filter_on and not rev_filter_on):
-                    percent_conserved = sites.count(sites[0])/len(sites)
+                    if non_conservative_only:
+                        diversity = diversity_index(util.to_conservative(sites))
+                    else:
+                        diversity = diversity_index(sites)
+
                     mutations_out.append(
                         FluMutationMultiWay(pymol_resi = str(i+1),
                             label = "".join(list(sites) + [str(p)]),
-                            percent_conserved = percent_conserved,
-                            conservative = conservative(sites[0], sites[1]) if len(sites) == 2 else None
+                            diversity = diversity,
+                            conservative = util.conservative(sites[0], sites[1]) if len(sites) == 2 else None
                             )
                     )
         return mutations_out
@@ -182,7 +188,7 @@ class SequenceComparison:
             conversion_index = int(pymol_position.replace("_","")) - 1
             label = "PNGS%s"%self.convert_numbering(conversion_index)
             pngs_out.append(FluPngs(pymol_resi = pymol_position,
-                label = label, percent_conserved = None))
+                label = label, diversity = None))
         return pngs_out
 
     def identify_PNGS_no_reference(self):
@@ -220,9 +226,9 @@ def compare_seq_no_reference(comparisons, convert, filtered=set(), rev_filtered=
     for pymol_position in comparison_set:
         conversion_index = int(pymol_position.replace("_","")) - 1
         label = "PNGS%s"%convert(conversion_index)
-        percent_conserved = sum([pymol_position in comp for comp in comparisons])/num_comparisons
+        diversity = sum([pymol_position in comp for comp in comparisons])/num_comparisons
         pngs_out.append(FluPngs(pymol_resi = pymol_position,
-            label = label, percent_conserved = percent_conserved))
+            label = label, diversity = diversity))
 
     return pngs_out
 
@@ -252,17 +258,6 @@ def make_figure(sc):
     spectrum = list(Color('red').range_to(Color('yellow'), num_comp))
     gly_spectrum = list(Color('purple').range_to(Color('blue'), num_comp))
 
-    # Color mutations
-    if sc.reference_mode:
-        if len(mutations) > 0:
-            cmd.select('mutations', '(resi %s)'%'+'.join([m.pymol_resi for m in mutations]))
-            cmd.color('yellow', 'mutations')
-    else:
-        for m in mutations:
-            color = list(spectrum[int(m.percent_conserved*num_comp)].get_rgb())
-            cmd.set_color("color_" + m.pymol_resi, color)
-            cmd.color("color_" + m.pymol_resi, m.label)
-
 
     # Color glycosylations
     if sc.reference_mode:
@@ -271,6 +266,18 @@ def make_figure(sc):
         color_pngs(sc.gly_share, "glycans_shared", "blue")
     else:
         color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", gly_spectrum)
+
+
+    # Color mutations
+    if sc.reference_mode:
+        if len(mutations) > 0:
+            cmd.select('mutations', '(resi %s)'%'+'.join([m.pymol_resi for m in mutations]))
+            cmd.color('yellow', 'mutations')
+    else:
+        for m in mutations:
+            color = list(spectrum[int(m.diversity*(len(spectrum)-1))].get_rgb())
+            cmd.set_color("color_" + m.pymol_resi, color)
+            cmd.color("color_" + m.pymol_resi, m.label)
 
     # Name file with the first 3 strains.
     base_filename = "-".join([n.replace("/", "_") for n in names[:3]])
@@ -299,7 +306,7 @@ def make_figure(sc):
         y_start = 0
         y_offset = -5
         draw_legend(x_pos, y_start, z_pos, y_offset, gly_spectrum, "gly", "PNGS")
-        draw_legend(x_pos + 25, y_start, z_pos, y_offset, spectrum, "mut", "Mutation")
+        draw_legend(x_pos + 25, y_start, z_pos, y_offset, spectrum, "mut", "Diversity")
 
     cmd.hide("everything", "extra_glycans")
 
@@ -324,10 +331,9 @@ def draw_legend(x, y, z, offset, spectrum, prefix, header):
         box = '\u2588'
 
         for i, c in enumerate(spectrum):
-            if i > 0:
-                cmd.set_color(f"{prefix}_color_{i}", list(c.get_rgb()))
-                perc_cons = round(100 * i/len(spectrum))
-                create_label(x, y + i * offset, z, f"{perc_cons}% {box}", f"{prefix}_spectrum_label_{i}", f"{prefix}_color_{i}")
+            cmd.set_color(f"{prefix}_color_{i}", list(c.get_rgb()))
+            perc_cons = round(100 * i/(len(spectrum)-1))
+            create_label(x, y + ((i + 1) * offset), z, f"{perc_cons}% {box}", f"{prefix}_spectrum_label_{i}", f"{prefix}_color_{i}")
 
 
 def color_pngs_no_reference(glylist, name, spectrum):
@@ -343,9 +349,9 @@ def color_pngs_no_reference(glylist, name, spectrum):
             try:
                 cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
 
-                color = list(spectrum[int(g.percent_conserved*(len(spectrum)-1))].get_rgb())
+                color = list(spectrum[int(g.diversity*(len(spectrum)-1))].get_rgb())
                 cmd.set_color("color_" + g.pymol_resi, color)
-                cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
+                cmd.set("stick_color", "color_" + g.pymol_resi)
             except Exception as e:
                 print(e)
 
@@ -382,6 +388,8 @@ def make_comparison_object(parameters):
     reference_mode = parameters["reference_mode"]
     filter_sites = parameters.get("filter_sites", [])
     reverse_filter_sites = parameters.get("reverse_filter_sites", [])
+    diversity_index = parameters.get("diversity_index", "shannon")
+    non_conservative_only = parameters.get("non-conservative_only", False)
 
     s1 = FluSeq(
         lineage = seq_lineage,
@@ -403,8 +411,22 @@ def make_comparison_object(parameters):
         numbering_scheme = numbering_scheme,
         reference_mode = reference_mode,
         filter_sites = filter_sites,
-        reverse_filter_sites = reverse_filter_sites
+        reverse_filter_sites = reverse_filter_sites,
+        diversity_index = diversity_index,
+        non_conservative_only = non_conservative_only
         )
 
     return comparison
+
+# Convert string option to function in util module.
+def convert_diversity_string(diversity_index):
+    d = diversity_index.lower().strip()
+    if d == "shannon":
+        return util.shannon
+    elif d == "richness":
+        return util.richness
+    elif d == "gini-simpson":
+        return util.gini_simpson
+    else:
+        return util.shannon
 
