@@ -258,6 +258,16 @@ def make_figure(sc):
     spectrum = list(Color('red').range_to(Color('yellow'), num_comp))
     gly_spectrum = list(Color('purple').range_to(Color('blue'), num_comp))
 
+
+    # Color glycosylations
+    if sc.reference_mode:
+        color_pngs(sc.gly_del, "glycan_deletions", "red")
+        color_pngs(sc.gly_add, "glycan_additions", "green")
+        color_pngs(sc.gly_share, "glycans_shared", "blue")
+    else:
+        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", gly_spectrum)
+
+
     # Color mutations
     if sc.reference_mode:
         if len(mutations) > 0:
@@ -268,15 +278,6 @@ def make_figure(sc):
             color = list(spectrum[int(m.diversity*(len(spectrum)-1))].get_rgb())
             cmd.set_color("color_" + m.pymol_resi, color)
             cmd.color("color_" + m.pymol_resi, m.label)
-
-
-    # Color glycosylations
-    if sc.reference_mode:
-        color_pngs(sc.gly_del, "glycan_deletions", "red")
-        color_pngs(sc.gly_add, "glycan_additions", "green")
-        color_pngs(sc.gly_share, "glycans_shared", "blue")
-    else:
-        color_pngs_no_reference(sc.gly_no_reference, "glycans_no_reference", gly_spectrum)
 
     # Name file with the first 3 strains.
     base_filename = "-".join([n.replace("/", "_") for n in names[:3]])
@@ -350,7 +351,7 @@ def color_pngs_no_reference(glylist, name, spectrum):
 
                 color = list(spectrum[int(g.diversity*(len(spectrum)-1))].get_rgb())
                 cmd.set_color("color_" + g.pymol_resi, color)
-                cmd.color("color_" + g.pymol_resi, name + g.pymol_resi)
+                cmd.set("stick_color", "color_" + g.pymol_resi)
             except Exception as e:
                 print(e)
 
