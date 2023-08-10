@@ -8,6 +8,6 @@
         "output_csv": false,
         "reference_mode": false,
         "export_files": ["PSE"],
-        "diversity_index": "gini-simpson",
-        "non-conservative_only": false
+        "diversity_index": "richness",
+        "non-conservative_only": true
 }

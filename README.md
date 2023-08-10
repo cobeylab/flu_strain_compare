@@ -4,6 +4,9 @@
 
 Flu Strain Compare generates visualizations of mutations between pairs of HA sequences. `make_comparison_figure.py` takes two HA sequences as input and outputs a figure highlighting amino acid and PNGS changes on a representative HA crystal structure. `make_movie.py` takes an ordered list of HA sequences as input and outputs a movie that depicts the amino acid and PNGS changes that occurred between consecutive pairs of strains in the list. At present, H1pdm and H3 strains are supported.
 
+
+![Example image](/figures/A_Cambodia_e0826360_2020-A_Darwin_6_2021-A_Tasmania_503_2020-7_others.png?raw=true)
+
 ## Dependencies
 
 This utility runs on Docker, Singularity, or natively with PyMOL installed as a Python module.
@@ -56,18 +59,21 @@ python3 setup.py install
 
 ## Configuration
 
-The `configuration/config.json` file serves as input for the `make_comparison_figure.py` script.
+The configuration file specified in the command line (see [Running](#running) below) serves as input for the `make_comparison_figure.py` script.
 
 * `seq_file`: Name of fasta-formatted file that contains full-length amino acid HA sequences. File must be in `data` directory.
 * `q1_id`: Sequence ID of the first query strain. The sequence id is the first word in the fasta header of the desired sequence.
-* `q2_id`: Same as above but for the second query strain.
-* `seq_lineage`: Specify the lineage of your query strains. Either H1 or H3 for now.
+* `q2_id`: Sequence ID of the second query strain.
+* `seq_lineage`: Lineage of the query strains. `"H1"` or `"H3"`.
 * `numbering_scheme`: What numbering scheme do you want to use for mutation identification? For H1 sequences, you can choose `H1pdm`, `H3`, or `H1_1933`. For H3 sequences, only `H3` numbering is available.
 * ``: What numbering scheme do you want to use for mutation identification? For H1 sequences, you can choose `H1pdm`, `H3`, or `H1_1933`. For H3 sequences, only `H3` numbering is available.
-* `reference_mode`: Use the reference strain for comparison (`true` or `false`),
+* `reference_mode`: Use the reference strain for comparison (`true` or `false`). _Note: .png output is much more resource intensive than .pse._,
 * `export_files`: Export .pse file, .png file, or both. Example: `["PSE"]`,
 * `filter_sites`: Filter out mutations and PNGS at the listed sites. Example: `[92, 94, 104]`,
-* `reverse_filter_sites`: Only include the listed sites, and exclude others. Note: reverse filter will override filter if both are non-empty. Example: `[92]`
+* `reverse_filter_sites`: Only include the listed sites, and exclude others. _Note: reverse filter will override filter if both are non-empty._ Example: `[92]`
+* `output_csv`: Write CSV to standard output. Default: `false` (JSON).
+* `diversity_index`: `"shannon"`, `"gini-simpson"`, `"richness"` (Default: Shannon).
+* `non-conservative_only`: Only include [non-conservative]() mutations to measure diversity. `true` or `false`.
 
 
 
