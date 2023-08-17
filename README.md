@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Flu Strain Compare generates visualizations of mutations between pairs of HA sequences. `make_comparison_figure.py` takes two HA sequences as input and outputs a figure highlighting amino acid and PNGS changes on a representative HA crystal structure. `make_movie.py` takes an ordered list of HA sequences as input and outputs a movie that depicts the amino acid and PNGS changes that occurred between consecutive pairs of strains in the list. At present, H1pdm and H3 strains are supported.
+Flu Strain Compare generates visualizations of mutations between pairs of HA sequences. `make_comparison_figure.py` takes two HA sequences as input and outputs a figure highlighting amino acid and PNGS changes on a representative HA crystal structure. At present, H1pdm and H3 strains are supported.
 
 ## Dependencies
 
@@ -70,14 +70,6 @@ The `configuration/config.json` file serves as input for the `make_comparison_fi
 * `reverse_filter_sites`: Only include the listed sites, and exclude others. Note: reverse filter will override filter if both are non-empty. Example: `[92]`
 
 
-
-Similarly, the `configuration/movie_config.json` file serves as input for the `make_movie.py` script.
-* `output_handle`: The output base filename for the final movie.
-* `seq_file`: Name fasta-formatted file that contains full-length amino acid HA sequences. File must be in `data` directory.
-* `seq_lineage`: Specify the lineage of your query strains. Either H1 or H3 for now.
-* `numbering_scheme`: What numbering scheme do you want to use for mutation identification? For H1 sequences, you can choose `H1pdm`, `H3`, or `H1_1933`. For H3 sequences, only `H3` numbering is available.
-* `frame_order`: The ordered list of sequence IDs to make the movie. Each frame of the movie consists of a comparison figure between each consecutive pair of strains in the list.
-
 ## Running
 
 
@@ -105,22 +97,19 @@ singularity exec --bind ${flu_strain_compare_path}:/app ubuntu-pymol-biopython_l
 ### Native
 
 ```
-python src/<SCRIPT NAME>.py configuration/config.json
+python src/make_comparison_figure.py configuration/config.json
 ```
-
-`<SCRIPT NAME>` should either be `make_comparison_figure` or `make_movie`
-
 
 Example:
 
 ```
 # from repo root
-singularity exec --bind /home/youruser/flu_strain_compare:/app ubuntu_pymol_biopython.sif python3 src/make_movie.py configuration/config.json
+singularity exec --bind /home/youruser/flu_strain_compare:/app ubuntu_pymol_biopython.sif python3 src/make_comparison_figure.py configuration/config.json
 ```
 
 ## Outputs
 
-Outputs from both scripts will be written to the `figures` directory of the repository.
+Outputs will be written to the `figures` directory of the repository.
 
 
 
