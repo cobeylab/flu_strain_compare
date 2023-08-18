@@ -122,7 +122,7 @@ singularity exec --bind /home/youruser/flu_strain_compare:/app ubuntu_pymol_biop
 
 Outputs will be written to the `figures` directory of the repository.
 
-If you wish the csv with additional information ot be printed out, include 
+If you wish the csv with additional information to be printed out, include 
 
 
 ## Unit tests
