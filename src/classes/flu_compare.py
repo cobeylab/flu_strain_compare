@@ -275,7 +275,11 @@ def make_figure(sc):
             cmd.color('yellow', 'mutations')
     else:
         for m in mutations:
-            color = list(spectrum[int(m.diversity*(len(spectrum)-1))].get_rgb())
+            # Bin exact diversity measure into number of colors in the spectrum.
+            bins = numpy.linspace(0, len(spectrum) - 1, len(spectrum))
+            exact_spectrum = m.diversity*(len(spectrum)-1)
+            binned_spectrum = numpy.digitize(exact_spectrum, bins, right=True)
+            color = list(spectrum[binned_spectrum].get_rgb())
             cmd.set_color("color_" + m.pymol_resi, color)
             cmd.color("color_" + m.pymol_resi, m.label)
 
@@ -348,8 +352,12 @@ def color_pngs_no_reference(glylist, name, spectrum):
         for g in glylist:
             try:
                 cmd.select(name + g.pymol_resi, "PNGS%s"%g.pymol_resi)
+                # Bin exact diversity measure into number of colors in the spectrum.
+                bins = numpy.linspace(0, len(spectrum) - 1, len(spectrum))
+                exact_spectrum = g.diversity*(len(spectrum)-1)
+                binned_spectrum = numpy.digitize(exact_spectrum, bins, right=True)
+                color = list(spectrum[binned_spectrum].get_rgb())
 
-                color = list(spectrum[int(g.diversity*(len(spectrum)-1))].get_rgb())
                 cmd.set_color("color_" + g.pymol_resi, color)
                 cmd.set("stick_color", "color_" + g.pymol_resi)
             except Exception as e:
