@@ -281,7 +281,7 @@ def make_figure(sc):
             binned_spectrum = numpy.digitize(exact_spectrum, bins, right=True)
             color = list(spectrum[binned_spectrum].get_rgb())
             cmd.set_color("color_" + m.pymol_resi, color)
-            cmd.color("color_" + m.pymol_resi, m.label)
+            cmd.set("surface_color", "color_" + m.pymol_resi, m.label)
 
     # Name file with the first 3 strains.
     base_filename = "-".join([n.replace("/", "_") for n in names[:3]])
@@ -344,6 +344,7 @@ def color_pngs_no_reference(glylist, name, spectrum):
     if len(glylist) > 0:
         PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
         PNGS_names_final = set(PNGS_names).intersection(set(cmd.get_names(type="selections")))
+
         # Need to add warning here if it finds a PNGS site that isn't in the structure
         if len(PNGS_names_final) > 0:
             cmd.select(name, ' | '.join(PNGS_names_final))
@@ -358,8 +359,8 @@ def color_pngs_no_reference(glylist, name, spectrum):
                 binned_spectrum = numpy.digitize(exact_spectrum, bins, right=True)
                 color = list(spectrum[binned_spectrum].get_rgb())
 
-                cmd.set_color("color_" + g.pymol_resi, color)
-                cmd.set("stick_color", "color_" + g.pymol_resi)
+                cmd.set_color("color_pngs_" + g.pymol_resi, color)
+                cmd.set("stick_color", "color_pngs_" + g.pymol_resi, "PNGS%s"%g.pymol_resi)
             except Exception as e:
                 print(e)
 
