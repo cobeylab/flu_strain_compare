@@ -1,7 +1,7 @@
 # Flu Strain Compare
 
 
-![3D influenza image](figures/example.png)
+![3D influenza image](example.png)
 
 
 ## Purpose
