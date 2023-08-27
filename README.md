@@ -1,5 +1,9 @@
 # Flu Strain Compare
 
+
+![3D influenza image](example.png)
+
+
 ## Purpose
 
 Flu Strain Compare generates visualizations of mutations between pairs of HA sequences. `make_comparison_figure.py` takes two HA sequences as input and outputs a figure highlighting amino acid and PNGS changes on a representative HA crystal structure. At present, H1pdm and H3 strains are supported.
