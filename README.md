@@ -8,6 +8,9 @@
 
 Flu Strain Compare generates visualizations of mutations between pairs of HA sequences. `make_comparison_figure.py` takes two HA sequences as input and outputs a figure highlighting amino acid and PNGS changes on a representative HA crystal structure. At present, H1pdm and H3 strains are supported.
 
+
+![Example image](/figures/A_Cambodia_e0826360_2020-A_Darwin_6_2021-A_Tasmania_503_2020-7_others.png?raw=true)
+
 ## Dependencies
 
 This utility runs on Docker, Singularity, or natively with PyMOL installed as a Python module.
@@ -61,19 +64,21 @@ python3 setup.py install
 
 ## Configuration
 
-The `configuration/config.json` file serves as input for the `make_comparison_figure.py` script. This is where you will select your options.
+The configuration file specified in the command line (see [Running](#running) below) serves as input for the `make_comparison_figure.py` script.
 
 * `seq_file`: Name of fasta-formatted file that contains full-length amino acid HA sequences. File must be in `data` directory.
-* `reference_id`: Sequence ID of the first query strain. The sequence id is the first word in the fasta header of the desired sequence. Note that the first word must be followed by a space and a | in the fasta file to be recognised, e.g. "vax2019 | EPI52000"
-* `comparison_ids`: Same as above but for the query strain(s).
-* `seq_lineage`: Specify the lineage of your query strains. Either H1 or H3 for now.
-* `numbering_scheme`: What numbering scheme do you want to use for mutation identification? For H1pdm, choose `H1`. For H3 sequences, choose `H3`. Down the line, we will implement cross-subtype comparisons.
-* `reference_mode`: Use the reference strain for comparison (`true` or `false`). If true, all sites in the dataset with at least one mutation from the reference are indicated in a single color. If false, diversity is represented by a colour gradient.
-* `diversity_index`: How is diversity calculated? Options are XXXX
-* `export_files`: Export .pse file, .png file, or both. Example: `["PSE"]`.
-* `filter_sites`: Filter out mutations and PNGS at the listed sites. Example: `[92, 94, 104]`.
-* `reverse_filter_sites`: Only include the listed sites, and exclude others. Note: reverse filter will override filter if both are non-empty. Example: `[92]`.
-* `non-conservative_only` (`true` or `false`): Do you want mutations shown ONLY if they are likely to lead to a change in amino acid biochemical properties? The categorization for amino acid properties is the following: XXX
+* `q1_id`: Sequence ID of the first query strain. The sequence id is the first word in the fasta header of the desired sequence.
+* `q2_id`: Sequence ID of the second query strain.
+* `seq_lineage`: Lineage of the query strains. `"H1"` or `"H3"`.
+* `numbering_scheme`: What numbering scheme do you want to use for mutation identification? For H1 sequences, you can choose `H1pdm`, `H3`, or `H1_1933`. For H3 sequences, only `H3` numbering is available.
+* ``: What numbering scheme do you want to use for mutation identification? For H1 sequences, you can choose `H1pdm`, `H3`, or `H1_1933`. For H3 sequences, only `H3` numbering is available.
+* `reference_mode`: Use the reference strain for comparison (`true` or `false`). _Note: .png output is much more resource intensive than .pse._,
+* `export_files`: Export .pse file, .png file, or both. Example: `["PSE"]`,
+* `filter_sites`: Filter out mutations and PNGS at the listed sites. Example: `[92, 94, 104]`,
+* `reverse_filter_sites`: Only include the listed sites, and exclude others. _Note: reverse filter will override filter if both are non-empty._ Example: `[92]`
+* `output_csv`: Write CSV to standard output. Default: `false` (JSON).
+* `diversity_index`: `"shannon"`, `"gini-simpson"`, `"richness"` (Default: Shannon).
+* `non-conservative_only`: Only include [non-conservative]() mutations to measure diversity. `true` or `false`.
 
 Notes
 * Site numbers input in "filter_sites" and "reverse_filter_sites" refer to amino acid numbering in the final HA proteins, after signaling peptides have been removed, from the start of HA1. The output table includes both numbering schemes (with and without signaling peptides), for reference 
