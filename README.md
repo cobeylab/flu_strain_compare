@@ -38,6 +38,8 @@ singularity build ubuntu-pymol-biopython_latest.sif docker-daemon://flu_strain_c
 
 Install PyMOL as a Python library.
 
+#### Linux/Unix
+
 ```
 # Optional, if using a virtual environment.
 python -m venv venv
@@ -61,6 +63,29 @@ cp -r mmtf-cpp/include/mmtf* include/
 
 python3 setup.py install
 ```
+
+#### Windows
+
+
+1. Install python dependencies.
+```
+pip install Bio pandas
+pip install scipy
+```
+
+2. Navigate to https://github.com/schrodinger/pymol-open-source/archive/refs/tags/v2.5.0.tar.gz in a browser and save the file.
+
+3. Uncompress v2.5.0.tar.gz using a compression utility such as [7-Zip](https://www.7-zip.org/).
+
+4. Clone https://github.com/rcsb/mmtf-cpp.git
+
+5. Copy `mmtf-cpp/include/mmtf/` and `mmtf-cpp/include/mmtf.hpp` to the `include/` directory in `pymol-open-source-v2.5.0` (the directory in the decompressed archive above).
+
+6. Install PyMOL as a library.
+```
+python3 setup.py install
+```
+
 
 ## Configuration
 
