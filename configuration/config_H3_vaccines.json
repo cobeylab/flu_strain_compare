@@ -1,0 +1,15 @@
+{
+        "seq_file": "sample_input/vaccineStrains_2015to2023_NH_egg_proteins.fas",
+        "reference_id": "vax2015",
+        "comparison_ids": ["vax2016","vax2018","vax2019","vax2020","vax2021","vax2022" ],
+        "seq_lineage": "H3",
+        "numbering_scheme": "H3",
+        "output_dir": "figures",
+        "reference_mode": false,
+		"export_files": ["PSE"],
+        "filter_sites": [],
+		 "diversity_index": "gini-simpson",
+        "non-conservative_only": false
+}
+
+        

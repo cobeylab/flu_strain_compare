@@ -1,13 +1,14 @@
 {
-        "seq_file": "sample_input/H3ref_test_20changes.fas",
+        "seq_file": "sample_input/test_MIXCONSchanges.fas",
         "reference_id": "original_sequence",
-        "comparison_ids": ["rep2", "rep3", "rep4", "rep5", "rep6", "rep7", "rep8", "rep9", "rep10"],
+        "comparison_ids": ["rep2"],
         "seq_lineage": "H3",
         "numbering_scheme": "H3",
-        "output_dir": "figures",
-        "reference_mode": true,
-		"export_files": ["PSE"],
-        "filter_sites": [171, 387, 374]
+		"output_dir": "figures",
+        "output_csv": true,
+        "reference_mode": false,
+        "export_files": ["PSE"],
+        "diversity_index": "gini-simpson",
+        "non-conservative_only": false
 }
 
-        
