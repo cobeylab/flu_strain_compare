@@ -1,4 +1,7 @@
 from pymol import cmd
+
+remove_glycans = False
+
 cmd.reinitialize()
 cmd.fetch('4we8') # A/Victoria/361/2011 sequence for reference
 
@@ -21,7 +24,8 @@ cmd.rotate("z", "20")
 
 # Rremove glycans
 # In the structure 4we8, the glycans can be identified as NAG, MAN, and BMA
-cmd.remove("resn NAG+MAN+BMA")
+if (remove_glycans):	
+	cmd.remove("resn NAG+MAN+BMA")
 
 # The loop below renumbers all the residues so that they match
 # Standard H3N2 numbering with position 1 beginning after the leader
