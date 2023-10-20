@@ -26,11 +26,16 @@ cmd.rotate("z", "20")
 # In the structure 4we8, the glycans can be identified as NAG, MAN, and BMA
 if (remove_glycans):	
 	cmd.remove("resn NAG+MAN+BMA")
+	suffix = "no_pngs"
+else:
+	suffix = "with_pngs"
 
 # The loop below renumbers all the residues so that they match
 # Standard H3N2 numbering with position 1 beginning after the leader
 # peptide.
 
+# In newer versions of pymol, you need to explicity specify which variables 
+# will get passed into cmd
 myspace = {'resis': []}
 resis = myspace['resis']
 
@@ -42,4 +47,4 @@ for i, (r, aa) in enumerate(resis):
 		new_resi = str(int(r)+offset)
 		cmd.alter("resi %s and resn %s"%(r,aa), "resi='%s_'"%(new_resi))
 cmd.iterate("4we8", "print(resi, resn)")
-cmd.save("H3_renumbered_with_PNGS.pse")
+cmd.save("H3_renumbered_%s.pse"%(suffix))
