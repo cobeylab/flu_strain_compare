@@ -27,12 +27,15 @@ cmd.remove("resn NAG+MAN+BMA")
 # Standard H3N2 numbering with position 1 beginning after the leader
 # peptide.
 
-resis = []
-cmd.iterate("4we8", "if (resi, resn) not in resis:\n\tresis.append((resi, resn))")
+myspace = {'resis': []}
+resis = myspace['resis']
+
+cmd.iterate("4we8", "if (resi, resn) not in resis:\n\tresis.append((resi, resn))", space = myspace)
+
 offset = 16
 for i, (r, aa) in enumerate(resis):
-	if aa != "NAG":
+	if aa not in ["NAG", "MAN", "BMA"]:
 		new_resi = str(int(r)+offset)
 		cmd.alter("resi %s and resn %s"%(r,aa), "resi='%s_'"%(new_resi))
 cmd.iterate("4we8", "print(resi, resn)")
-cmd.save("../data/H3_renumbered.pse")
+cmd.save("H3_renumbered_with_PNGS.pse")
