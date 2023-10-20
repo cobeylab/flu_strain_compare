@@ -1,4 +1,7 @@
 from pymol import cmd
+
+remove_glycans = False
+
 cmd.reinitialize()
 cmd.fetch('4M4Y')
 cmd.remove('solvent')
@@ -10,11 +13,16 @@ cmd.rotate("z", "-45")
 cmd.rotate("y", "15")
 cmd.rotate("x", "15")
 
+if (remove_glycans):	
+	cmd.remove("resi 400+401+402+403+407")
+	suffix = "no_pngs"
+else:
+	suffix = "with_pngs"
+
 # Removing glycans
 # In this case, it was easier to remove residues that represented glycans and not actual amino acids
 # I figured this out manually when I first played around with this structure
 cmd.remove("chain G+H")
-cmd.remove("resi 400+401+402+403+407")
 
 # The following loops renumber the residues so that position 1 indicates the first
 # residue after the leader sequence.
@@ -36,4 +44,4 @@ for i, (r, aa) in enumerate(resis):
 	cmd.alter("chain B+D+F & resi %s & resn %s"%(r,aa), "resi='%s_'"%(str(i+start_position)))
 cmd.iterate("chain B", "print(resi, resn)")
 
-cmd.save("../data/H1_renumbered.pse")
+cmd.save("H1_renumbered_%s.pse"%(suffix))
