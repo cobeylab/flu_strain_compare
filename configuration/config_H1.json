@@ -5,7 +5,7 @@
         "seq_lineage": "H1",
         "numbering_scheme": "H1",
         "output_dir": "figures",
-        "reference_mode": true,
-		        "export_files": ["PSE"],
+        "reference_mode": false,
+		    "export_files": ["PSE"],
         "filter_sites": [92, 94, 104]
 }
