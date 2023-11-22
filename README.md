@@ -186,3 +186,11 @@ pytest
 * 2017-2019 cell-based recommendation (name = `A/Michigan/45/2015`, id = `EPI699812`
 * 2009-2017 cell-based recommendation (name = `A/California/04/2009`, id = `EPI178457`)
 * 2013-2014 example from Linderman et al. (name = `A/Colorado/3514/2013`, id = `EPI501723`)
+
+
+## Scripts
+
+* `renumber_H1.py` and `renumber_H3.py`: _Re-index PDB files for use with Flu Strain Compare._
+* `print_pymol_objects.py`: _Print chains and selections in a .pse file to compare modifications to the model._
+
+
