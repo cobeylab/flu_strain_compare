@@ -152,7 +152,6 @@ class SequenceComparison:
                         diversity = diversity_index(util.to_conservative(sites))
                     else:
                         diversity = diversity_index(sites)
-
                     mutations_out.append(
                         FluMutationMultiWay(pymol_resi = str(i+1),
                             label = "".join(list(sites) + [str(p)]),
@@ -271,7 +270,7 @@ def make_figure(sc):
     # Color mutations
     if sc.reference_mode:
         if len(mutations) > 0:
-            cmd.select('mutations', '(resi %s)'%'+'.join([m.pymol_resi for m in mutations]))
+            cmd.select('mutations', '(resi %s_)'%'+'.join([m.pymol_resi for m in mutations]))
             cmd.color('yellow', 'mutations')
     else:
         for m in mutations:
@@ -324,6 +323,7 @@ def color_pngs(glylist, name, color):
     if len(glylist) > 0:
         PNGS_names = ["PNGS%s"%g.pymol_resi for g in glylist]
         PNGS_names_final = set(PNGS_names).intersection(set(cmd.get_names(type="selections")))
+
         # Need to add warning here if it finds a PNGS site that isn't in the structure
         if len(PNGS_names_final) > 0:
             cmd.select(name, ' | '.join(PNGS_names_final))
@@ -377,7 +377,7 @@ def label_resi(resilist):
         label = m.label
         resi = m.pymol_resi
         if resi != "-":
-            cmd.select(label, 'n. CA and i. ' + resi)
+            cmd.select(label, f"n. CA and i. {resi}_")
             cmd.label(selection = label, expression = f"'{label}'")
             cmd.hide("labels", label)
 
@@ -386,7 +386,7 @@ def label_resi_full(resilist):
         label = m.label
         resi = m.pymol_resi
         if resi != "-":
-            cmd.select(label, f'(resi {resi})')
+            cmd.select(label, f'(resi {resi}_)')
 
 def make_comparison_object(parameters):
     seq_file = parameters["seq_file"]

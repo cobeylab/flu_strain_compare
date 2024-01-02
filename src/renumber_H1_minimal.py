@@ -1,5 +1,4 @@
 from pymol import cmd
-
 import util
 import re
 
@@ -14,33 +13,25 @@ cmd.rotate("z", "-45")
 cmd.rotate("y", "15")
 cmd.rotate("x", "15")
 
-# Removing glycans
-# In this case, it was easier to remove residues that represented glycans and not actual amino acids
-# I figured this out manually when I first played around with this structure
-cmd.remove("chain G+H")
-cmd.remove("resi 400+401+402+403+407")
+#cmd.remove("chain G+H")
+#cmd.remove("resi 400+401+402+403+407")
 
-# The following loops renumber the residues so that position 1 indicates the first
-# residue after the leader sequence.
-
-myspace = {'resis': []}
+myspace = {'resis': [], 'excluded_resi': ['400', '401', '402', '403', '407']}
 resis = myspace['resis']
-
-cmd.iterate("chain A", "if (resi, resn) not in resis:\n\tresis.append((resi, resn))", space = myspace)
+cmd.iterate("chain A", "if (resi, resn) not in resis and resi not in excluded_resi:\n\tresis.append((resi, resn))", space = myspace)
 start_position = 14
 for i, (r, aa) in enumerate(resis):
 	new_resi = str(i+start_position)
-	cmd.alter("chain A+C+E & resi %s & resn %s"%(r,aa), "resi='%s_'"%(new_resi))
-cmd.iterate("chain A", "print(resi, resn)")
+	cmd.alter("chain A+C+E & resi %s & resn %s"%(r,aa), "resi='%s'"%(new_resi))
 
-myspace = {'resis': []}
+
+myspace = {'resis': [], 'excluded_resi': ['400', '401', '402', '403', '407']}
 resis = myspace['resis']
-
-cmd.iterate("chain B", "if (resi, resn) not in resis:\n\tresis.append((resi, resn))", space = myspace)
+cmd.iterate("chain B", "if (resi, resn) not in resis and resi not in excluded_resi:\n\tresis.append((resi, resn))", space = myspace)
 start_position = 345
 for i, (r, aa) in enumerate(resis):
 	new_resi = str(i+start_position)
-	cmd.alter("chain B+D+F & resi %s & resn %s"%(r,aa), "resi='%s_'"%(str(i+start_position)))
+	cmd.alter("chain B+D+F & resi %s & resn %s"%(r,aa), "resi='%s'"%(str(i+start_position)))
 cmd.iterate("chain B", "print(resi, resn)")
 
 
@@ -74,5 +65,4 @@ for p in model_pngs:
 # TODO kludge to avoid extra_glycans error
 cmd.select("extra_glycans", "i. 0")
 
-
-cmd.save("H1_renumbered.pse")
+cmd.save("H1_minimal.pse")
