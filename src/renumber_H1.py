@@ -30,7 +30,7 @@ cmd.iterate("chain A", "if (resi, resn) not in resis:\n\tresis.append((resi, res
 start_position = 14
 for i, (r, aa) in enumerate(resis):
 	new_resi = str(i+start_position)
-	cmd.alter("chain A+C+E & resi %s & resn %s"%(r,aa), "resi='%s_'"%(new_resi))
+	cmd.alter("chain A+C+E & resi %s & resn %s"%(r,aa), "resi='%s'"%(new_resi))
 cmd.iterate("chain A", "print(resi, resn)")
 
 myspace = {'resis': []}
@@ -40,7 +40,7 @@ cmd.iterate("chain B", "if (resi, resn) not in resis:\n\tresis.append((resi, res
 start_position = 345
 for i, (r, aa) in enumerate(resis):
 	new_resi = str(i+start_position)
-	cmd.alter("chain B+D+F & resi %s & resn %s"%(r,aa), "resi='%s_'"%(str(i+start_position)))
+	cmd.alter("chain B+D+F & resi %s & resn %s"%(r,aa), "resi='%s'"%(str(i+start_position)))
 cmd.iterate("chain B", "print(resi, resn)")
 
 
