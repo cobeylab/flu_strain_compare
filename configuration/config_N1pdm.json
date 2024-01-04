@@ -1,0 +1,11 @@
+{
+        "seq_file": "sample_input/N1pdm_NA_testdataset.fasta",
+        "reference_id": "A/Stockholm/3/2010",
+        "comparison_ids": ["A/Mexico/4108/2009", "A/Texas/05/2009", "A/England/195/2009"],
+        "seq_lineage": "N1pdm",
+        "numbering_scheme": "N1pdm",
+        "output_dir": "figures",
+        "reference_mode": false,
+		    "export_files": ["PSE"],
+        "filter_sites": [92, 94, 104]
+}
