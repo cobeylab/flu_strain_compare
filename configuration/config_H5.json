@@ -1,0 +1,11 @@
+{
+        "seq_file": "sample_input/H5_HA_testdataset.fasta",
+        "reference_id": "A/Chicken/Argentina/2796-2/2023",
+        "comparison_ids": ["A/Red_Tailed_Hawk/BC/AIVPHL-1453/2023", "A/Red_Tailed_Hawk/BC/AIVPHL-1450/2023"],
+        "seq_lineage": "H5",
+        "numbering_scheme": "H5",
+        "output_dir": "figures",
+        "reference_mode": false,
+		    "export_files": ["PSE"],
+        "filter_sites": [92, 94, 104]
+}
