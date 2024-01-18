@@ -30,7 +30,8 @@ cmd.iterate("chain A", "if (resi, resn) not in resis:\n\tresis.append((resi, res
 start_position = 14
 for i, (r, aa) in enumerate(resis):
 	new_resi = str(i+start_position)
-	cmd.alter("chain A+C+E & resi %s & resn %s"%(r,aa), "resi='%s'"%(new_resi))
+	cmd.alter("chain A+C+E & resi %s & resn %s"%(r,aa), "resi='%s_'"%(new_resi))
+cmd.sort()
 cmd.iterate("chain A", "print(resi, resn)")
 
 myspace = {'resis': []}
@@ -40,7 +41,8 @@ cmd.iterate("chain B", "if (resi, resn) not in resis:\n\tresis.append((resi, res
 start_position = 345
 for i, (r, aa) in enumerate(resis):
 	new_resi = str(i+start_position)
-	cmd.alter("chain B+D+F & resi %s & resn %s"%(r,aa), "resi='%s'"%(str(i+start_position)))
+	cmd.alter("chain B+D+F & resi %s & resn %s"%(r,aa), "resi='%s_'"%(str(i+start_position)))
+cmd.sort()
 cmd.iterate("chain B", "print(resi, resn)")
 
 
@@ -65,7 +67,7 @@ model_pngs = [str(m.start() + 1) for m in gly.finditer(str(seq_model))]
 for p in model_pngs:
     try:
         idx = int(p) + 14 ## check that the indices coming out are correct
-        cmd.select(f"PNGS{idx}", f"i. {idx}")
+        cmd.select(f"PNGS{idx}", f"i. {idx}_")
     except Exception as e:
         print(e)
         
@@ -89,7 +91,7 @@ model_pngs = [str(m.start() + 1) for m in gly.finditer(str(seq_model))]
 for p in model_pngs:
     try:
         idx = int(p) + 345 - 1
-        cmd.select(f"PNGS{idx}", f"i. {idx}")
+        cmd.select(f"PNGS{idx}", f"i. {idx}_")
     except Exception as e:
         print(e)        
 
